@@ -1,3 +1,8 @@
+function roundTo(x,y)
+{
+    return (x % y) >= (y/2) ? parseInt(x / y) * y + y : parseInt(x / y) * y;
+}
+
 var parseCSV = function (data) {
       // Parse CSV data
       csvRows = $.csv.toArrays(data);
@@ -104,25 +109,27 @@ var parseCSV = function (data) {
 		
 			// De-granularise the timestamp
 			var timestamp = element.x;
-			
+			var timestampUnix = new Date(timestamp);
 			switch ($('#granularity').val()) {
-			  case "unchanged":
-				  timestampUnix = new Date(timestamp);
-				  break;
-			  case "minute":
-				  timestampUnix = new Date(timestamp);
-				  timestampUnix.setSeconds(0);
-				  break;
-			  case "hour":
-				  timestampUnix = new Date(timestamp);
-				  timestampUnix.setMinutes(0);
-				  timestampUnix.setSeconds(0);
-				  break;
-			  case "day":
-				  timestampUnix = new Date(timestamp);
-				  timestampUnix.setHours(0);
-				  timestampUnix.setMinutes(0);
-				  timestampUnix.setSeconds(0);
+				case "minute":
+					
+					timestampUnix.setSeconds(0);
+					break;
+				case "hour":
+				
+					timestampUnix.setMinutes(0);
+					timestampUnix.setSeconds(0);
+					break;
+				case "day":
+				
+					timestampUnix.setHours(0);
+					timestampUnix.setMinutes(0);
+					timestampUnix.setSeconds(0);
+					break;
+				case "round-to-minutes":
+					timestampUnix.setSeconds(0);
+					timestampUnix.setMinutes(roundTo(timestampUnix.getMinutes(), 5));
+					break;
 			}
 
 			timestampUnix = timestampUnix.getTime();
