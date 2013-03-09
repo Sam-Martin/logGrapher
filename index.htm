@@ -1,0 +1,124 @@
+<html>
+	<head>
+		<link href="http://netdna.bootstrapcdn.com/font-awesome/3.0.2/css/font-awesome.css" rel="stylesheet" media="screen">
+		<link href="http://netdna.bootstrapcdn.com/twitter-bootstrap/2.3.0/css/bootstrap-combined.min.css" rel="stylesheet" media="screen">
+		<link href="style.css" rel="stylesheet" media="screen">
+	 </head>
+	<body>
+		<div class="row-fluid">
+			<div class="span12">
+				 <h1>PS log grapher<br/><small>Sam Martin</small></h1>
+			
+				<form>
+				
+					 <h2>Chart</h2>
+				<div class="row-fluid">
+					<div class="span6">
+						<label for="chart-type">type</label>
+					</div>
+					<div class="span6">
+						<select id="chart-type" name="chart-type">
+							<option value="spline">spline</option>
+							<option value="column">column</option>
+						</select>
+					</div>
+				</div>
+				<h2>Columns</h2>
+				<div class="row-fluid">
+					<div class="span6">
+						<label for="timestamp-index">timeStamp col number</label>
+						<label for="value-index">value col number</label>
+						<label>label col number</label>
+					</div>
+					<div class="span6">
+						<input type="text" id="timestamp-index" name="timestamp-index" value="2" class="narrowField" />
+						<input type="text" id="value-index" name="value-index" value="4" class="narrowField" />
+						<input type="text" id="label-index" name="label-index" value="0" class="narrowField" />						
+					</div>
+				</div>
+				<h2>Data Manipulation</h2>
+				<div class="row-fluid">
+					<div class="span6">
+						<label for="granularity">granularity</label>
+						<label for="combination-method">combination method</label>
+						<label for="aggregate-labels">aggregate labels<br/> <small>Only used if granularity is not infinite</small></label>
+					</div>
+					<div class="span6">
+						<select id="granularity" name="granularity">
+							<option value="unchanged">unchanged</option>
+							<option value="minute">minute</option>
+							<option value="hour">hour</option>
+							<option value="day">day</option>
+						</select>
+						<select id="combination-method" name="combination-method">
+							<option value="average">average</option>
+							<option value="add">add</option>
+						</select>
+						<input type="checkbox" name="aggregate-labels" id="aggregateLabels"/>
+					</div>
+				</div>
+				
+				<h2>Formatting</h2>
+				
+				<div class="row-fluid">
+					<div class="span6">
+						<label for="chart-height">Chart Height</label>  
+					</div>
+					<div class="span6">
+						<input type="text" id="chart-height" name="chart-height" value="" />
+					</div>      
+				</div>
+				
+				<h2>Input</h2>
+				
+				<div class="row-fluid">
+					<div class="span6">
+						<label title="Host on Google Docs and paste public CSV Link">CSV URL</label>
+					</div>
+					<div class="span6">
+						<input type="text" id="csvURL" name="csvURL" value="" />
+					</div>
+				</div>
+				<div class="row-fluid">
+					<div class="span6 offset6">
+						<h5 >And<br/><small>Optional</small></h5>
+					</div>
+				</div>
+				<div class="row-fluid">
+					<div class="span6">
+						<label>JSON URL</label>
+					</div>
+					<div class="span6">
+						<input type="text" id="jsonURL" name="jsonURL" value="" />
+					</div>
+				</div>
+				<div class="row-fluid">
+					<div class="span6 offset6">
+						<h3>Or</h3>
+					</div>
+				</div>
+				<div class="row-fluid">
+					<div class="span6">
+						<label>CSV Raw</label>
+					</div>
+					<div class="span6">
+						<textarea id="csvRaw"></textarea>
+					</div>
+				</div>
+					<input type="submit" class="btn" value="Go" />
+				</form>
+				<div id="container"></div>
+				<textarea id="jsonOutput"></textarea>
+			</div>
+		</div>
+		
+		<!-- Frameworks -->
+		<script src="http://code.jquery.com/jquery.min.js"></script>
+		<script src="http://jquery-csv.googlecode.com/files/jquery.csv-0.71.min.js"></script>
+		<script src="http://code.highcharts.com/highcharts.js"></script>
+		<script src="http://netdna.bootstrapcdn.com/twitter-bootstrap/2.3.0/js/bootstrap.min.js"></script>
+		<!-- Custom JS -->
+		<script src="js/main.js"></script>
+		<script src="js/aggregate-data.js"></script>
+	</body>
+</html>

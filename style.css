@@ -1,0 +1,27 @@
+body {
+    padding:20px;
+}
+#container {
+    margin:20px;
+    min-width: 100px;
+    height: 100%;
+}
+form {
+    width:500px;
+}
+
+.narrowField {
+    width:50px;
+}
+
+input, textarea, select{
+	display:block !important;
+}
+
+label, input, textarea, select{
+	height:30px;
+}
+
+input[type=submit] {
+    clear:both;
+}
