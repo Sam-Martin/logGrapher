@@ -67,32 +67,33 @@
       
       
       // Initialise chart
-      chart = new Highcharts.Chart({
-          plotOptions: {
-              line: {
-                  enableMouseTracking: false,
-                  marker: {
-                      enabled: false
-                  }
+    chart = new Highcharts.Chart({
+        plotOptions: {
+			
+             series: {
+                //enableMouseTracking: false,
+                marker: {
+                      enabled: true
+                },
+				turboThreshold: 1000000,
+				  connectNulls: true,
               },
               marker: {
                   lineWidth: 1
               },
-              series: {
-                  turboThreshold: 1000000
-              }
+             
           },
           chart: {
               zoomType: 'x',
-              type: $('#chart-type').val(),
               renderTo: 'container'
           },
           legend: {
               enabled: true
           },
           tooltip: {
-              // shared: true,
-              // crosshairs: true,
+              //shared: true,
+              //crosshairs: true,
+			  enabled:true,
               formatter: function () {
 
                   return "<strong>" + this.series.name + ":</strong>" + this.y + "<br/>" + Highcharts.dateFormat("%d/%m/%Y %H:%M:%S", parseInt(this.x));
@@ -111,7 +112,7 @@
               title: {
                   text: ""
               },
-
+			
               labels: {
                   formatter: function () {
                       return this.value;
@@ -126,8 +127,7 @@
               title: {
                   text: ""
               },
-
-              labels: {
+			labels: {
                   formatter: function () {
                       return this.value;
                   },
@@ -143,4 +143,5 @@
           series: series1
 
       });
+	  console.log(chart);//debug
   }

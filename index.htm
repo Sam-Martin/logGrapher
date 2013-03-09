@@ -3,11 +3,13 @@
 		<link href="http://netdna.bootstrapcdn.com/font-awesome/3.0.2/css/font-awesome.css" rel="stylesheet" media="screen">
 		<link href="http://netdna.bootstrapcdn.com/twitter-bootstrap/2.3.0/css/bootstrap-combined.min.css" rel="stylesheet" media="screen">
 		<link href="style.css" rel="stylesheet" media="screen">
+		<title>Log Grapher</title>
 	 </head>
 	<body>
+		 <h1>Log Grapher<br/><small>Sam Martin</small></h1>
 		<div class="row-fluid">
 			<div class="span12">
-				 <h1>PS log grapher<br/><small>Sam Martin</small></h1>
+				
 			
 				<form>
 				
@@ -18,7 +20,7 @@
 					</div>
 					<div class="span6">
 						<select id="chart-type" name="chart-type">
-							<option value="spline">spline</option>
+							<option value="line">spline</option>
 							<option value="column">column</option>
 						</select>
 					</div>
@@ -54,7 +56,7 @@
 							<option value="average">average</option>
 							<option value="add">add</option>
 						</select>
-						<input type="checkbox" name="aggregate-labels" id="aggregateLabels"/>
+						<input type="checkbox" name="aggregate-labels" id="aggregate-labels"/>
 					</div>
 				</div>
 				
@@ -108,7 +110,6 @@
 					<input type="submit" class="btn" value="Go" />
 				</form>
 				<div id="container"></div>
-				<textarea id="jsonOutput"></textarea>
 			</div>
 		</div>
 		
