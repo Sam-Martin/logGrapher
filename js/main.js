@@ -99,24 +99,31 @@ window.onload = load;
 	
 	console.log("Uncompressed query length: "+hashInput.length +" chars");// debug
 	console.log("Compressed query length: "+hash.length+" chars"); //debug
-	
 	window.location.hash =  hash;
+ }
+ 
+ var cleanJSON = function(json){
+	var amountToTrim = (json.length-1)-json.lastIndexOf(']');
+	return json.slice(json, json.length-amountToTrim);
  }
  
  var populateFormFromHash = function(){
 	if (window.location.hash) {
-	
+
 		// Fetch Hash
 		var hash = window.location.hash.substring(1);
 		
 		// Decompress
-		hash = Iuppiter.decompress(Iuppiter.Base64.decode(Iuppiter.toByteArray(hash), true));
+		var decompressedHash = Iuppiter.decompress(Iuppiter.Base64.decode(Iuppiter.toByteArray(hash), true));
+		
+		// Clear invalid characters that occasionally result from compression
+		decompressedHash = cleanJSON(decompressedHash); 
 		
 		// Decode JSON
-		var formElements = $.parseJSON(hash);
+		decompressedHash = $.parseJSON(decompressedHash); //debug
 		
-		// loop through each value and set it in the form
-		$.each(formElements, function (index, element) {
+		// Loop through each value and set it in the form
+		$.each(decompressedHash, function (index, element) {
 			if(element.value == "on"){
 				$('[name=' + element.name + ']').attr('checked', true);
 			}else{
