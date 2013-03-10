@@ -56,8 +56,9 @@
 				<div class="row-fluid">
 					<div class="span6">
 						<label for="granularity">granularity</label>
-						<label for="combination-method">combination method</label>
-						<label for="aggregate-labels">aggregate labels<br/> <small>Only used if granularity is not infinite</small></label>
+						<label for="time-aggregation-method">time aggregation method</label>
+						<label for="aggregate-labels">aggregate labels<br/></label>
+						<label for="label-aggregation-method">label aggregation method</label>
 					</div>
 					<div class="span6">
 						<select id="granularity" name="granularity">
@@ -70,11 +71,17 @@
 							<option value="hour">hour</option>
 							<option value="day">day</option>
 						</select>
-						<select id="combination-method" name="combination-method">
+						<select id="time-aggregation-method" name="time-aggregation-method">
 							<option value="average">average</option>
 							<option value="add">add</option>
+							<option value="top">top</option>
 						</select>
 						<input type="checkbox" name="aggregate-labels" id="aggregate-labels"/>
+						<select id="label-aggregation-method" name="label-aggregation-method">
+							<option value="average">average</option>
+							<option value="add">add</option>
+							<option value="top">top</option>
+						</select>
 					</div>
 				</div>
 				
