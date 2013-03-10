@@ -5,6 +5,7 @@ body {
     margin:20px;
     min-width: 100px;
     height: 100%;
+	display:none;
 }
 form {
     width:500px;
@@ -24,4 +25,7 @@ label, input, textarea, select{
 
 input[type=submit] {
     clear:both;
+}
+#chart-options{
+	display:none;
 }
