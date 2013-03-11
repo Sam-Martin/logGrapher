@@ -1,6 +1,7 @@
-  var chart;
-  var hostAverage
-  var perVM
+var chart;
+var hostAverage;
+var perVM;
+var worker = new Worker('js/webworkers.js');
 
 function sortByTimestamp(a, b) {
 	if (a.x < b.x) return -1;
@@ -78,11 +79,15 @@ $(document).ready(function () {
 			if (file) {
 			var reader = new FileReader();
 			reader.onload = function (e) {
+			
+				
 				var contents = e.target.result;
 				
 				parseCSV(contents);
 				console.log("Got the file.n" + "name: " + file.name + "\n" + "type: " + file.type + "\n" + "size: " + file.size + " bytes");
 			}
+			
+			// Send off the reader to read the file, we'll have to wait until "onload" fires
 			reader.readAsText(file);
 			} else {
 				alert("Failed to load file");
