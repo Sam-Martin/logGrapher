@@ -1,7 +1,4 @@
-function roundTo(x,y)
-{
-    return (x % y) >= (y/2) ? parseInt(x / y) * y + y : parseInt(x / y) * y;
-}
+
 
 var createSeriesObj = function(settings, csvRows){
 	 
@@ -81,20 +78,21 @@ var parseCSV = function (data) {
 	}
 	
 	// Send off a web worker
-	console.log("sending off worker") ;//debug
-	worker.postMessage({
+	$("#container > span").html('Aggregating Series...');
+	
+	worker.postMessage(JSON.stringify({
 		function: workerFunction,
 		settings: aggregateSeriesSettings,
 		value: seriesArray
-	});
+	}));
 	
 	
 	// Wait for the worker to return
 	worker.onmessage = function (event) {
 		
 		console.log("Worker return"); //debug
-		console.log(event.data);
-		seriesArray = event.data;
+		
+		seriesArray = JSON.parse(event.data);
 		
 		
 		
@@ -102,6 +100,8 @@ var parseCSV = function (data) {
 		var workerFunction = null;
 		var aggregateSeriesPointsByTimeSettings;
 		if($('#granularity').val() != "unchanged"){
+			
+			$("#container > span").html('Aggregating By Time...');
 			
 			// Define the settings
 			aggregateSeriesPointsByTimeSettings ={
@@ -114,21 +114,23 @@ var parseCSV = function (data) {
 		
 		// Send off a web worker
 		console.log("sending off worker") ;//debug
-		worker.postMessage({
+		worker.postMessage(JSON.stringify({
 			function: workerFunction,
 			settings: aggregateSeriesPointsByTimeSettings,
 			value: seriesArray
-		});
+		}));
 		
 		
 		// Wait for the worker to return
 		worker.onmessage = function (event) {
 			
 			console.log("Worker return"); //debug
-			console.log(event.data);
-			seriesArray = event.data;
+			
+			seriesArray = JSON.parse(event.data);
 		
 			if($('#jsonURL').val().length > 0){
+				
+				$("#container > span").html('Fetching JSON...');
 				
 				// Fetch the specified json
 				$.getJSON($('#jsonURL').val(),function(jsonData){
@@ -169,19 +171,21 @@ var parseCSV = function (data) {
 var sortByTimeAndDisplay = function(seriesArray){
 	// Send off a web worker
 	console.log("sending off worker") ;//debug
-	worker.postMessage({
+	$("#container > span").html('Sorting By Time...');
+	worker.postMessage(JSON.stringify({
 		function: "sortSeriesPointsByTime",
 		settings: {},
 		value: seriesArray
-	});
+	}));
 	
 	
 	// Wait for the worker to return
 	worker.onmessage = function (event) {
 			
 		console.log("Worker return"); //debug
-		console.log(event.data);
-		seriesArray = event.data;
+		$("#container > span").html('Rendering Chart...');
+		
+		seriesArray = JSON.parse(event.data);
 		
 		// Clone the thing (not doing this causes some very odd behaviour where some series don't actually exist!
 		seriesArray =  $.parseJSON(JSON.stringify(seriesArray));

@@ -3,11 +3,6 @@ var hostAverage;
 var perVM;
 var worker = new Worker('js/webworkers.js');
 
-function sortByTimestamp(a, b) {
-	if (a.x < b.x) return -1;
-	if (a.x > b.x) return 1;
-	return 0;
-}
 function load()
 {
 	//Get your own Browser API Key from  https://code.google.com/apis/console/
@@ -126,6 +121,8 @@ $(document).ready(function () {
 					return xhr;
 				},
 				success: function (data) {
+					
+					console.log("CSV fetched"); //debug
 					if (data.length > 0) {
 						parseCSV(data);
 					} else {

@@ -2,31 +2,44 @@ self.addEventListener("message", function(ev){
 	
 		
 	// Get the data
-	var data = ev.data;
+	var data = JSON.parse(ev.data);
 	
 	// Find out which function they want
 	switch(data.function){
 		case "aggregateSeriesPointsByTime":
 			
 			// Send back the results
-			postMessage(aggregateSeriesPointsByTime(data.settings,data.value));
+			postMessage(JSON.stringify(aggregateSeriesPointsByTime(data.settings,data.value)));
 			break;
 		case "aggregateSeries":
 			
 			// Send back the results
 			
-			postMessage(aggregateSeries(data.settings,data.value));
+			postMessage(JSON.stringify(aggregateSeries(data.settings,data.value)));
+			break;
+		case "sortSeriesPointsByTime":
+			postMessage(JSON.stringify(sortSeriesPointsByTime(data.value)));
 			break;
 		default:
-			postMessage(data.value);
+			postMessage(JSON.stringify(data.value));
 			break;
 	}
 	
 	
 });
 
+function roundTo(x,y){
+    return (x % y) >= (y/2) ? parseInt(x / y) * y + y : parseInt(x / y) * y;
+}
 
-  var sortSeriesPointsByTime = function(series){
+function sortByTimestamp(a, b) {
+	if (a.x < b.x) return -1;
+	if (a.x > b.x) return 1;
+	return 0;
+}
+
+
+var sortSeriesPointsByTime = function(series){
 	
 	// Loop through each series
 	for(index in series){
@@ -36,8 +49,9 @@ self.addEventListener("message", function(ev){
 		// Sort this series' datapoints
 		element.data.sort(sortByTimestamp);
 	}
-	// This doesn't need to return as arrays/obj are not cloned when passed to functions
-
+	
+	
+	return series;
 }
 
 var aggregateSeriesPointsByTime = function(settings,seriesArray){
