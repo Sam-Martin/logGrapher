@@ -100,7 +100,7 @@ window.onload = load;
 								percentComplete = Math.round(percentComplete*100)/100;
 								
 								//Do something with download progress
-								console.log(percentComplete);
+								$("#container").html('<i class="icon-spinner icon-spin icon-large" id="loading"></i> Loading - ' +percentComplete+'%');
 							}
 						}, false);
 						return xhr;
