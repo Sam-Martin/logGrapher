@@ -72,9 +72,40 @@ window.onload = load;
               if ($('#csvRaw').val().length > 0) {
                   parseCSV($('#csvRaw').val());
               } else {
-                  $.ajax(
-                  $('#csvURL').val(), {
-                      success: function (data) {
+
+				$.ajax(
+					$('#csvURL').val(), {
+					xhr: function(){
+						var xhr = new window.XMLHttpRequest();
+						
+						//Upload progress
+						xhr.upload.addEventListener("progress", function(evt){
+							if (evt.lengthComputable) {
+								var percentComplete =(evt.loaded / evt.total) * 100;
+								
+								// Round to two decimal places
+								percentComplete = Math.round(percentComplete*100)/100;
+								
+								//Do something with upload progress
+								console.log(percentComplete);
+							}
+						}, false);
+						
+						//Download progress
+						xhr.addEventListener("progress", function(evt){
+							if (evt.lengthComputable) {
+								var percentComplete =(evt.loaded / evt.total) * 100;
+								
+								// Round to two decimal places
+								percentComplete = Math.round(percentComplete*100)/100;
+								
+								//Do something with download progress
+								console.log(percentComplete);
+							}
+						}, false);
+						return xhr;
+					},
+                    success: function (data) {
                           if (data.length > 0) {
                               parseCSV(data);
                           } else {
