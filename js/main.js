@@ -16,110 +16,125 @@ function load()
 }
 window.onload = load;
 
-      //objs.sort(compare);
-    $(document).ready(function () {
-		
-		
-		// Enable the short url generator
-		$('#short-url').click(function(ev){
-			ev.preventDefault();
-			
-			$('#short-url').text("Please wait..."); //debug
-			// Show the Modal
-			$('#short-url-modal').modal({show:true});
-			
-			var request = gapi.client.urlshortener.url.insert({
-			  'resource': {
+
+$(document).ready(function () {
+
+
+	// Enable the short url generator
+	$('#short-url').click(function(ev){
+		ev.preventDefault();
+
+		$('#short-url').text("Please wait..."); //debug
+		// Show the Modal
+		$('#short-url-modal').modal({show:true});
+
+		var request = gapi.client.urlshortener.url.insert({
+		  'resource': {
 			  'longUrl': location.href
 			}
-			});
-			request.execute(function(response) 
-			{
-				
-				if(response.id != null)
-				{
-					$('#short-url').text("Short URL");
-					$('#short-url-modal p').text(response.id)
-					
-				}
-				else
-				{
-					$('#short-url-modal p').text(response.error);
-				}
-			
-			});
 		});
-		
-          // Check for pre-filled report
-          populateFormFromHash();
+		request.execute(function(response) 
+		{
 
-          $("form").submit(function (ev) {
-              ev.preventDefault();
-              
-			// Display Container(s)
-			$('#container,#chart-options').show(); 
-       
-            // Update the hash
-            updateHash();
-            
-			if($('#chart-height').val()!=""){
-			  
-				  $('#container').height($('#chart-height').val());
+			if(response.id != null)
+			{
+				$('#short-url').text("Short URL");
+				$('#short-url-modal p').text(response.id)
+
 			}
-			  $('form').slideUp();
-			  $("#container").html('<i class="icon-spinner icon-spin icon-large" id="loading"></i> Loading');
+			else
+			{
+				$('#short-url-modal p').text(response.error);
+			}
 
-              if ($('#csvRaw').val().length > 0) {
-                  parseCSV($('#csvRaw').val());
-              } else {
+		});
+	});
 
-				$.ajax(
-					$('#csvURL').val(), {
-					xhr: function(){
-						var xhr = new window.XMLHttpRequest();
-						
-						//Upload progress
-						xhr.upload.addEventListener("progress", function(evt){
-							if (evt.lengthComputable) {
-								var percentComplete =(evt.loaded / evt.total) * 100;
-								
-								// Round to two decimal places
-								percentComplete = Math.round(percentComplete*100)/100;
-								
-								//Do something with upload progress
-								console.log(percentComplete);
-							}
-						}, false);
-						
-						//Download progress
-						xhr.addEventListener("progress", function(evt){
-							if (evt.lengthComputable) {
-								var percentComplete =(evt.loaded / evt.total) * 100;
-								
-								// Round to two decimal places
-								percentComplete = Math.round(percentComplete*100)/100;
-								
-								//Do something with download progress
-								$("#container").html('<i class="icon-spinner icon-spin icon-large" id="loading"></i> Loading - ' +percentComplete+'%');
-							}
-						}, false);
-						return xhr;
-					},
-                    success: function (data) {
-                          if (data.length > 0) {
-                              parseCSV(data);
-                          } else {
-                              $("#container").html("<h2>Error</h2><p>Invalid Input</p>").addClass("alert").addClass("alert-error");
-                          }
-                      },
-                      error: function (jqXHR, textStatus, errorThrown) {
-                          $("#container").html("<h2>Error</h2>" + errorThrown).addClass("alert").addClass("alert-error");
-                      }
-                  });
-              }
-              return false;
-          });
-      });
+	// Check for pre-filled report
+	populateFormFromHash();
+
+	$("form").submit(function (ev) {
+		ev.preventDefault();
+		  
+		// Display Container(s)
+		$('#container,#chart-options').show(); 
+
+		// Update the hash
+		updateHash();
+
+		if($('#chart-height').val()!=""){
+		  
+			 $('#container').height($('#chart-height').val());
+		}
+		$('form').slideUp();
+		$("#container").html('<i class="icon-spinner icon-spin icon-large" id="loading"></i> <span>Loading</span>');
+		
+		// Fetch local CSV example: http://jsfiddle.net/CnJYR/
+
+		if ($('#local-csv').get(0).files.length > 0) {
+			 //Retrieve the first (and only!) File from the FileList object
+			var file = $('#local-csv').get(0).files[0];
+
+			if (file) {
+			var reader = new FileReader();
+			reader.onload = function (e) {
+				var contents = e.target.result;
+				
+				parseCSV(contents);
+				console.log("Got the file.n" + "name: " + file.name + "\n" + "type: " + file.type + "\n" + "size: " + file.size + " bytes");
+			}
+			reader.readAsText(file);
+			} else {
+				alert("Failed to load file");
+			}
+		} else {
+
+			$.ajax($('#csvURL').val(), {
+				xhr: function(){
+				var xhr = new window.XMLHttpRequest();
+
+					//Upload progress
+					xhr.upload.addEventListener("progress", function(evt){
+						if (evt.lengthComputable) {
+							var percentComplete =(evt.loaded / evt.total) * 100;
+
+							// Round to two decimal places
+							percentComplete = Math.round(percentComplete*100)/100;
+
+							//Do something with upload progress
+							console.log(percentComplete);
+						}
+					}, false);
+
+					//Download progress
+					xhr.addEventListener("progress", function(evt){
+						if (evt.lengthComputable) {
+							var percentComplete =(evt.loaded / evt.total) * 100;
+
+							// Round to two decimal places
+							percentComplete = Math.round(percentComplete*100)/100;
+
+							//Do something with download progress
+							$("#container > span").html('Loading - ' +percentComplete+'%');
+						}
+					}, false);
+					return xhr;
+				},
+				success: function (data) {
+					if (data.length > 0) {
+						parseCSV(data);
+					} else {
+						$("#container").html("<h2>Error</h2><p>Invalid Input</p>").addClass("alert").addClass("alert-error");
+					}
+				},
+				error: function (jqXHR, textStatus, errorThrown) {
+					$("#container").html("<h2>Error</h2>" + errorThrown).addClass("alert").addClass("alert-error");
+				}
+			});
+		}
+		return false;
+	});
+});
 
  var updateHash = function(){
 	

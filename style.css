@@ -11,9 +11,7 @@ form {
     width:500px;
 }
 
-.narrowField {
-    width:50px;
-}
+
 
 input, textarea, select{
 	display:block !important;
