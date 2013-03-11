@@ -70,6 +70,7 @@ var parseCSV = function (data) {
 	if ($('#aggregate-labels').is(':checked')) {
 	
 		aggregateSeriesSettings = {
+			labelAggregationMethod: $('#label-aggregation-method').val(),
 			chartType: $('#chart-type').val()
 		}
 		

@@ -201,7 +201,7 @@ var aggregateSeries = function(settings,seriesArray){
 	for(timestamp in newSeriesDataByTime){
 		valArray = newSeriesDataByTime[timestamp];
 	
-		aggr = aggregateDatapointArray(valArray,$('#label-aggregation-method').val());
+		aggr = aggregateDatapointArray(valArray,settings.labelAggregationMethod);
 
 		// Add it to the series
 		data.push({
