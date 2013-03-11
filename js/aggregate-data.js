@@ -96,100 +96,101 @@ var parseCSV = function (data) {
 		
 		
 		
-		// Aggregate by time
-		var workerFunction = null;
-		var aggregateSeriesPointsByTimeSettings;
-		if($('#granularity').val() != "unchanged"){
+	
+	
+		if($('#jsonURL').val().length > 0){
 			
-			$("#container > span").html('Aggregating By Time...');
+			$("#container > span").html('Fetching JSON...');
 			
-			// Define the settings
-			aggregateSeriesPointsByTimeSettings ={
-				granularity: $('#granularity').val(),
-				timeAggregationMethod: $('#time-aggregation-method').val()
-			}
-			workerFunction = "aggregateSeriesPointsByTime";
-			//seriesArray = aggregateSeriesPointsByTime(aggregateSeriesPointsByTimeSettings,seriesArray);
-		}
-		
-		// Send off a web worker
-		console.log("sending off worker") ;//debug
-		worker.postMessage(JSON.stringify({
-			function: workerFunction,
-			settings: aggregateSeriesPointsByTimeSettings,
-			value: seriesArray
-		}));
-		
-		
-		// Wait for the worker to return
-		worker.onmessage = function (event) {
-			
-			console.log("Worker return"); //debug
-			
-			seriesArray = JSON.parse(event.data);
-		
-			if($('#jsonURL').val().length > 0){
+			// Fetch the specified json
+			$.getJSON($('#jsonURL').val(),function(jsonData){
 				
-				$("#container > span").html('Fetching JSON...');
 				
-				// Fetch the specified json
-				$.getJSON($('#jsonURL').val(),function(jsonData){
+				
+				// Add each series to the list
+				$.each(jsonData, function(index, jsonSeries){
+					// Customise the series
+					jsonSeries.type = $('#chart-type').val();
+					jsonSeries.yAxis = 1;
 					
 					
 					
-					// Add each series to the list
-					$.each(jsonData, function(index, jsonSeries){
-						// Customise the series
-						jsonSeries.type = $('#chart-type').val();
-						jsonSeries.yAxis = 1;
-						
-						// Aggregate by time
-						if($('#granularity').val() != "unchanged"){
-							jsonSeries = aggregateSeriesPointsByTime([jsonSeries]);
-							jsonSeries = jsonSeries[0];
-						}
-						
-						seriesArray.push(jsonSeries);
-					});
-					
-					
-					
-					// Sort by time
-					sortByTimeAndDisplay(seriesArray);
-			   });
-			}else{
+					seriesArray.push(jsonSeries);
+				});
+				
 				
 				
 				// Sort by time
 				sortByTimeAndDisplay(seriesArray);
-			}
+		   });
+		}else{
+			
+			
+			// Sort by time
+			sortByTimeAndDisplay(seriesArray);
 		}
+		
 	};
 	
 }
 
 var sortByTimeAndDisplay = function(seriesArray){
+	// Aggregate by time
+	var workerFunction = null;
+	var aggregateSeriesPointsByTimeSettings;
+	if($('#granularity').val() != "unchanged"){
+		
+		$("#container > span").html('Aggregating By Time...');
+		
+		// Define the settings
+		aggregateSeriesPointsByTimeSettings ={
+			granularity: $('#granularity').val(),
+			timeAggregationMethod: $('#time-aggregation-method').val()
+		}
+		workerFunction = "aggregateSeriesPointsByTime";
+		//seriesArray = aggregateSeriesPointsByTime(aggregateSeriesPointsByTimeSettings,seriesArray);
+	}
+	
 	// Send off a web worker
 	console.log("sending off worker") ;//debug
-	$("#container > span").html('Sorting By Time...');
 	worker.postMessage(JSON.stringify({
-		function: "sortSeriesPointsByTime",
-		settings: {},
+		function: workerFunction,
+		settings: aggregateSeriesPointsByTimeSettings,
 		value: seriesArray
 	}));
 	
 	
 	// Wait for the worker to return
 	worker.onmessage = function (event) {
-			
+		
 		console.log("Worker return"); //debug
-		$("#container > span").html('Rendering Chart...');
 		
 		seriesArray = JSON.parse(event.data);
 		
-		// Clone the thing (not doing this causes some very odd behaviour where some series don't actually exist!
-		seriesArray =  $.parseJSON(JSON.stringify(seriesArray));
+		// Sort by time
+		// Send off a web worker
+		console.log("sending off worker") ;//debug
+		$("#container > span").html('Sorting By Time...');
+		worker.postMessage(JSON.stringify({
+			function: "sortSeriesPointsByTime",
+			settings: {},
+			value: seriesArray
+		}));
+	
 		
-		renderChart(seriesArray);
+		
+		// Wait for the worker to return
+		worker.onmessage = function (event) {
+				
+			console.log("Worker return"); //debug
+			$("#container > span").html('Rendering Chart...');
+			
+			seriesArray = JSON.parse(event.data);
+			
+			// Clone the thing (not doing this causes some very odd behaviour where some series don't actually exist!
+			seriesArray =  $.parseJSON(JSON.stringify(seriesArray));
+			
+			renderChart(seriesArray);
+		}
 	}
  }
