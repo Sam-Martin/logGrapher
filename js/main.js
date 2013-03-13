@@ -2,6 +2,8 @@ var chart;
 var hostAverage;
 var perVM;
 var worker = new Worker('js/webworkers.js');
+var seriesArray = [];
+var displayableStart = 0;
 
 function load()
 {
@@ -15,7 +17,22 @@ window.onload = load;
 
 $(document).ready(function () {
 
-
+	
+	// Enable the next/previous buttons for cycling through series
+	$('#previous-series').click(function(ev){
+	
+		var numSeriesDisplayed = parseInt($('#num-series-displayed').val())
+		displayableStart = displayableStart-numSeriesDisplayed;
+		changeDisplayedSeries(displayableStart);
+	});
+	$('#next-series').click(function(ev){
+		
+		var numSeriesDisplayed = parseInt($('#num-series-displayed').val())
+		displayableStart = displayableStart+numSeriesDisplayed;
+		changeDisplayedSeries(displayableStart);
+	});
+	
+	
 	// Enable the short url generator
 	$('#short-url').click(function(ev){
 		ev.preventDefault();
@@ -154,6 +171,16 @@ $(document).ready(function () {
 	var amountToTrim = (json.length-1)-json.lastIndexOf(']');
 	return json.slice(json, json.length-amountToTrim);
  }
+ 
+ var changeDisplayedSeries = function(newSeriesStart){
+	var numSeriesDisplayed = parseInt($('#num-series-displayed').val());
+	tempSeriesArray = seriesArray.slice(newSeriesStart,newSeriesStart+numSeriesDisplayed);
+	console.log("Displaying series " + newSeriesStart +" to "+(newSeriesStart+numSeriesDisplayed));
+	$('#restricted-series-nav h5').text("Displaying series " + newSeriesStart +" to "+(newSeriesStart+numSeriesDisplayed) +" of " +seriesArray.length);
+	
+	renderChart(tempSeriesArray);
+	
+}
  
  var populateFormFromHash = function(){
 	if (window.location.hash) {

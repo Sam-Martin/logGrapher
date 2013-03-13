@@ -42,7 +42,7 @@ var parseCSV = function (data) {
       csvRows = $.csv.toArrays(data);
 	  // Initialise variables
       hostAverage = [];
-      seriesArray = [];
+      tempSeriesArray = [];
       hostObj = {};
      
 	var createSeriesObjSettings = {
@@ -56,7 +56,7 @@ var parseCSV = function (data) {
     // Reformat for HighCharts
     $.each(seriesByName, function (seriesName, data) {
        
-		seriesArray.push({
+		tempSeriesArray.push({
 			name: seriesName,
 			type: $('#chart-type').val(),
 			data: data
@@ -84,7 +84,7 @@ var parseCSV = function (data) {
 	worker.postMessage(JSON.stringify({
 		function: workerFunction,
 		settings: aggregateSeriesSettings,
-		value: seriesArray
+		value: tempSeriesArray
 	}));
 	
 	
@@ -93,7 +93,7 @@ var parseCSV = function (data) {
 		
 		console.log("Worker return"); //debug
 		
-		seriesArray = JSON.parse(event.data);
+		tempSeriesArray = JSON.parse(event.data);
 		
 		
 		
@@ -116,26 +116,26 @@ var parseCSV = function (data) {
 					
 					
 					
-					seriesArray.push(jsonSeries);
+					tempSeriesArray.push(jsonSeries);
 				});
 				
 				
 				
 				// Sort by time
-				sortByTimeAndDisplay(seriesArray);
+				sortByTimeAndDisplay(tempSeriesArray);
 		   });
 		}else{
 			
 			
 			// Sort by time
-			sortByTimeAndDisplay(seriesArray);
+			sortByTimeAndDisplay(tempSeriesArray);
 		}
 		
 	};
 	
 }
 
-var sortByTimeAndDisplay = function(seriesArray){
+var sortByTimeAndDisplay = function(tempSeriesArray){
 	// Aggregate by time
 	var workerFunction = null;
 	var aggregateSeriesPointsByTimeSettings;
@@ -149,7 +149,7 @@ var sortByTimeAndDisplay = function(seriesArray){
 			timeAggregationMethod: $('#time-aggregation-method').val()
 		}
 		workerFunction = "aggregateSeriesPointsByTime";
-		//seriesArray = aggregateSeriesPointsByTime(aggregateSeriesPointsByTimeSettings,seriesArray);
+		//tempSeriesArray = aggregateSeriesPointsByTime(aggregateSeriesPointsByTimeSettings,tempSeriesArray);
 	}
 	
 	// Send off a web worker
@@ -157,25 +157,52 @@ var sortByTimeAndDisplay = function(seriesArray){
 	worker.postMessage(JSON.stringify({
 		function: workerFunction,
 		settings: aggregateSeriesPointsByTimeSettings,
-		value: seriesArray
+		value: tempSeriesArray
 	}));
 	
 	
 	// Wait for the worker to return
 	worker.onmessage = function (event) {
-		
 		console.log("Worker return"); //debug
 		
-		seriesArray = JSON.parse(event.data);
-		
+			tempSeriesArray = JSON.parse(event.data);
 		// Sort by time
+		sortByTime(tempSeriesArray,function(tempSeriesArray){
+		
+			// Commit our temporary array to the permanent variable
+			seriesArray = tempSeriesArray;
+			
+
+			
+			// Clone the thing (not doing this causes some very odd behaviour where some series don't actually exist! (probably irrelevant now workers clone it for us)
+			//tempSeriesArray =  $.parseJSON(JSON.stringify(tempSeriesArray));
+			
+			// More than twenty series causes major problems
+			if(tempSeriesArray.length > 20){
+				var newSeriesStart = 0;
+				tempSeriesArray = seriesArray.slice(newSeriesStart,newSeriesStart+20);
+				
+				$('#restricted-series-nav h5').text("Displaying series " + newSeriesStart +" to "+(newSeriesStart+20));
+				console.log("Restricting displayable serieses down to 20 from "+seriesArray.length);
+				$('#restricted-series-nav').show();
+			}
+			
+			renderChart(tempSeriesArray);
+		});
+	}
+ }
+ 
+ 
+ var sortByTime = function(tempSeriesArray,callback){
+		
+	
 		// Send off a web worker
-		console.log("sending off worker") ;//debug
+		console.log("sending off worker to sort by time") ;//debug
 		$("#container > span").html('Sorting By Time...');
 		worker.postMessage(JSON.stringify({
 			function: "sortSeriesPointsByTime",
 			settings: {},
-			value: seriesArray
+			value: tempSeriesArray
 		}));
 	
 		
@@ -186,12 +213,7 @@ var sortByTimeAndDisplay = function(seriesArray){
 			console.log("Worker return"); //debug
 			$("#container > span").html('Rendering Chart...');
 			
-			seriesArray = JSON.parse(event.data);
-			
-			// Clone the thing (not doing this causes some very odd behaviour where some series don't actually exist!
-			seriesArray =  $.parseJSON(JSON.stringify(seriesArray));
-			
-			renderChart(seriesArray);
+			tempSeriesArray = JSON.parse(event.data);
+			callback(tempSeriesArray);
 		}
-	}
- }
+}
