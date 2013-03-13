@@ -234,8 +234,7 @@ $(document).ready(function () {
   
 	
      
-	// Create link to download chart data
-	$('#download-element').attr("download", "graph.json").attr('href','data:textcharset=utf-8,'+encodeURI(JSON.stringify(series1)));
+	
 	
 	
     // Initialise chart

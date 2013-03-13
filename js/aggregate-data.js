@@ -1,11 +1,13 @@
 var tempCSVArray = [];
 
 var createSeriesObj = function(settings, csvRows){
-	 
+	var count =0; //debug
 	seriesByName = {}
 	 
 	// Loop through the rows and aggregate the series (defined by 'labels') into objects
 	for(key in csvRows){
+	
+		
 		element = csvRows[key];
 		
 		var val = element[settings.valueIndex];
@@ -16,7 +18,7 @@ var createSeriesObj = function(settings, csvRows){
 
 			// Check to see if the series has been added to the obj
 			if (typeof (seriesByName[seriesName]) == 'undefined') {
-
+				count++; //debug
 				// It hasn't, add it
 				seriesByName[seriesName] = [];
 			}
@@ -34,6 +36,7 @@ var createSeriesObj = function(settings, csvRows){
 
 		}
 	};
+	console.log("Found "+count+" series"); //debug
 	return seriesByName;
 }
 
@@ -241,12 +244,13 @@ var sortByTimeAndDisplay = function(tempSeriesArray){
 			tempSeriesArray = JSON.parse(event.data);
 		// Sort by time
 		sortByTime(tempSeriesArray,function(tempSeriesArray){
-		
+				
 			// Commit our temporary array to the permanent variable
 			seriesArray = tempSeriesArray;
 			
-
-			
+			// Create link to download chart data
+			$('#download-element').attr("download", "graph.json").attr('href','data:textcharset=utf-8,'+encodeURI(JSON.stringify(seriesArray)));
+				
 			// Clone the thing (not doing this causes some very odd behaviour where some series don't actually exist! (probably irrelevant now workers clone it for us)
 			//tempSeriesArray =  $.parseJSON(JSON.stringify(tempSeriesArray));
 			
@@ -260,11 +264,11 @@ var sortByTimeAndDisplay = function(tempSeriesArray){
 				$('#restricted-series-nav').show();
 			}
 			
+			
 			renderChart(tempSeriesArray);
 		});
 	}
  }
- 
  
  var sortByTime = function(tempSeriesArray,callback){
 		
@@ -285,6 +289,8 @@ var sortByTimeAndDisplay = function(tempSeriesArray){
 				
 			console.log("Worker return"); //debug
 			$("#container > span").html('Rendering Chart...');
+			
+			
 			
 			tempSeriesArray = JSON.parse(event.data);
 			callback(tempSeriesArray);
