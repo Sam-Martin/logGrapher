@@ -2,6 +2,7 @@ var chart;
 var hostAverage;
 var perVM;
 var worker = new Worker('js/webworkers.js');
+var csvWorker = new Worker('js/csvParserWorker.js');
 var seriesArray = [];
 var displayableStart = 0;
 

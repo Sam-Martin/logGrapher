@@ -1,4 +1,4 @@
-
+var tempCSVArray = [];
 
 var createSeriesObj = function(settings, csvRows){
 	 
@@ -7,7 +7,7 @@ var createSeriesObj = function(settings, csvRows){
 	// Loop through the rows and aggregate the series (defined by 'labels') into objects
 	for(key in csvRows){
 		element = csvRows[key];
-
+		
 		var val = element[settings.valueIndex];
 		var timestamp = element[settings.timestampIndex];
 		var seriesName = element[settings.labelIndex];
@@ -38,30 +38,94 @@ var createSeriesObj = function(settings, csvRows){
 }
 
 var parseCSV = function (data) {
-      // Parse CSV data
-      csvRows = $.csv.toArrays(data);
-	  // Initialise variables
-      hostAverage = [];
-      tempSeriesArray = [];
-      hostObj = {};
-     
+	
+	// Split the CSV into lines
+	var splitCSV = data.split('\n');
+	
+	console.log(splitCSV.length); //debug
+
+    
+	
+	// Set off the loop to process a maximum of 100,000 rows at a time
+	parseCSVLoop(splitCSV, 0);
+	//csvRows = $.csv.toArrays(data);
+	
+	
+	
+	
+}
+
+var parseCSVLoop = function(splitCSV, curIndex, result){
+	
+	console.log("parseCSVLoop, current index:"+curIndex); //debug
+	
+	// If this is returning from a worker, add the result to the tempCSVArray
+	if(typeof(result) != "undefined"){
+		
+		tempCSVArray = tempCSVArray.concat(result);
+		
+	}
+	
+	if(curIndex != splitCSV.length){
+		// Process the CSV 100000 rows at a time
+		var maxNumRows = 100000;
+		
+		// Calculate the number of rows to deal with now
+		var numRowsToProcess = (curIndex+maxNumRows > splitCSV.length) ? splitCSV.length - curIndex : maxNumRows;
+		var nextIndex = curIndex + numRowsToProcess;
+		
+		var rowsToProcess = splitCSV.slice(curIndex, curIndex+numRowsToProcess);
+		
+		rowsToProcess= rowsToProcess.join("\n");
+		
+		//console.log("\n\n"+rowsToProcess);//debug
+		
+		console.log("numRowsToProcess:"+numRowsToProcess);
+		console.log("nextIndex:"+nextIndex);
+		
+		// Parse CSV data using a worker
+		csvWorker.postMessage(rowsToProcess);
+		
+		
+		// Wait for the worker to return
+		csvWorker.onmessage = function (event) {
+			
+			console.log("Worker return"); //debug
+			parseCSVLoop(splitCSV, nextIndex, event.data);
+		}
+	}else{
+		//console.log(tempCSVArray); //debug
+		convertCSVArrayToChartObj(tempCSVArray)
+	}
+}
+
+var convertCSVArrayToChartObj = function(csvRows){
+
+	// Initialise variables
+	hostAverage = [];
+	tempSeriesArray = [];
+	hostObj = {};
+	 
 	var createSeriesObjSettings = {
 		timestampIndex: $('#timestamp-index').val(),
 		valueIndex: $('#value-index').val(),
 		labelIndex: $('#label-index').val()
 	}
-	  
+	
+	
+	// Aggregate into an object by name
 	seriesByName = createSeriesObj(createSeriesObjSettings, csvRows);
-
-    // Reformat for HighCharts
-    $.each(seriesByName, function (seriesName, data) {
-       
+	
+	
+	// Reformat for HighCharts
+	$.each(seriesByName, function (seriesName, data) {
+	   
 		tempSeriesArray.push({
 			name: seriesName,
 			type: $('#chart-type').val(),
 			data: data
 		});
-    });
+	});
 	
 	var workerFunction = null;
 	var aggregateSeriesSettings=null;
@@ -131,9 +195,9 @@ var parseCSV = function (data) {
 			sortByTimeAndDisplay(tempSeriesArray);
 		}
 		
-	};
-	
+	}
 }
+
 
 var sortByTimeAndDisplay = function(tempSeriesArray){
 	// Aggregate by time
