@@ -105,8 +105,11 @@ $(document).ready(function () {
 			} else {
 				alert("Failed to load file");
 			}
-		} else {
-
+		}else if($('#csvURL').val().length > 0){
+			
+			
+			
+			// Fetch the CSV from HTTP
 			$.ajax($('#csvURL').val(), {
 				xhr: function(){
 				var xhr = new window.XMLHttpRequest();
@@ -151,6 +154,22 @@ $(document).ready(function () {
 					$("#container").html("<h2>Error</h2>" + errorThrown).addClass("alert").addClass("alert-error");
 				}
 			});
+		} else if($('#jsonURL').val().length > 0){
+			
+			$("#container > span").html('Fetching JSON...');
+			
+			// Fetch the specified json
+			$.getJSON($('#jsonURL').val(),function(tempSeriesArray){
+				
+				
+				
+				
+				
+				// Sort by time
+				sortByTimeAndDisplay(tempSeriesArray);
+		   }); 
+		}else{
+			alert("Please enter a datasource"); //debug
 		}
 		return false;
 	});

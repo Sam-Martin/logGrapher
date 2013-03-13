@@ -56,6 +56,15 @@ var parseCSV = function (data) {
 }
 
 var parseCSVLoop = function(splitCSV, curIndex, result){
+
+	// Calculate the percentage
+	var percentComplete =(curIndex / splitCSV.length) * 100;
+
+	// Round to two decimal places
+	percentComplete = Math.round(percentComplete*100)/100;
+	
+	// Update the user on our progress
+	$("#container > span").html('Parsing CSV ' + percentComplete + "%");
 	
 	console.log("parseCSVLoop, current index:"+curIndex); //debug
 	
@@ -67,8 +76,8 @@ var parseCSVLoop = function(splitCSV, curIndex, result){
 	}
 	
 	if(curIndex != splitCSV.length){
-		// Process the CSV 100000 rows at a time
-		var maxNumRows = 100000;
+		// Process the CSV 10000 rows at a time
+		var maxNumRows = 10000;
 		
 		// Calculate the number of rows to deal with now
 		var numRowsToProcess = (curIndex+maxNumRows > splitCSV.length) ? splitCSV.length - curIndex : maxNumRows;
