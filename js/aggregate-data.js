@@ -12,7 +12,19 @@ var createSeriesObj = function(settings, csvRows){
 		
 		var val = element[settings.valueIndex];
 		var timestamp = element[settings.timestampIndex];
-		var seriesName = element[settings.labelIndex];
+		var seriesName = "";
+		
+		// Check to see if we're using multiple fields for labels
+		if(settings.labelIndex.indexOf(",") >=0){
+			
+			var seriesNamePartsIndexes = settings.labelIndex.split(",");
+			//console.log(seriesNamePartsIndexes); //debug
+			var seriesNameArray = [];
+			for(i in seriesNamePartsIndexes){
+				seriesNameArray.push(element[seriesNamePartsIndexes[i]])
+			}
+			seriesName = seriesNameArray.join(' - ');
+		}
 
 		if (parseInt(val) >= 0 && seriesName.length > 0) {
 

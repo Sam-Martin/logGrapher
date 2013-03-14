@@ -170,6 +170,7 @@ $(document).ready(function () {
 		   }); 
 		}else{
 			alert("Please enter a datasource"); //debug
+			
 		}
 		return false;
 	});
