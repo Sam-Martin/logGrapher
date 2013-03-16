@@ -17,13 +17,17 @@ var createSeriesObj = function(settings, csvRows){
 		// Check to see if we're using multiple fields for labels
 		if(settings.labelIndex.indexOf(",") >=0){
 			
+			// If we are, loop through and build a label from each column specified
 			var seriesNamePartsIndexes = settings.labelIndex.split(",");
-			//console.log(seriesNamePartsIndexes); //debug
 			var seriesNameArray = [];
 			for(i in seriesNamePartsIndexes){
 				seriesNameArray.push(element[seriesNamePartsIndexes[i]])
 			}
 			seriesName = seriesNameArray.join(' - ');
+		
+		}else{
+			
+			seriesName = element[settings.labelIndex];
 		}
 
 		if (parseInt(val) >= 0 && seriesName.length > 0) {
