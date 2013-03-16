@@ -5,6 +5,7 @@ var worker = new Worker('js/webworkers.js');
 var csvWorker = new Worker('js/csvParserWorker.js');
 var seriesArray = [];
 var displayableStart = 0;
+var chartName;
 
 function load()
 {
@@ -94,10 +95,11 @@ $(document).ready(function () {
 			reader.onload = function (e) {
 			
 				
+				chartName = file.name;
 				var contents = e.target.result;
 				
 				parseCSV(contents);
-				console.log("Got the file.n" + "name: " + file.name + "\n" + "type: " + file.type + "\n" + "size: " + file.size + " bytes");
+				console.log("Got the file" + "name: " + file.name + "\n" + "type: " + file.type + "\n" + "size: " + file.size + " bytes");
 			}
 			
 			// Send off the reader to read the file, we'll have to wait until "onload" fires
@@ -143,7 +145,13 @@ $(document).ready(function () {
 				},
 				success: function (data) {
 					
-					console.log("CSV fetched"); //debug
+					// Get filename
+					var filename = $('#csvURL').val().match("\/[^\/]*$");
+					filename = filename[0];
+					
+					chartName = filename;
+					
+					console.log("CSV fetched: " + filename); //debug
 					if (data.length > 0) {
 						parseCSV(data);
 					} else {
@@ -155,6 +163,13 @@ $(document).ready(function () {
 				}
 			});
 		} else if($('#jsonURL').val().length > 0){
+			
+			
+			// Get filename
+			var filename = $('#jsonURL').val().match("\/[^\/]*$");
+			filename = filename[0];
+			
+			chartName = filename;
 			
 			$("#container > span").html('Fetching JSON...');
 			
@@ -269,7 +284,7 @@ $(document).ready(function () {
             
           },
           title: {
-              text: 'Custom Graph'
+              text: chartName
           },
           subtitle: {
               //text: 'Delayed write fail instances multiplied by ten'
