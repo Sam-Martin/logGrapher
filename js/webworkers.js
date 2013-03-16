@@ -32,6 +32,10 @@ function roundTo(x,y){
     return (x % y) >= (y/2) ? parseInt(x / y) * y + y : parseInt(x / y) * y;
 }
 
+function roundUpTo(x,y){
+    return (x % y) >= y ? parseInt(x / y) * y + y : parseInt(x / y) * y;
+}
+
 function sortByTimestamp(a, b) {
 	if (a.x < b.x) return -1;
 	if (a.x > b.x) return 1;
@@ -91,19 +95,19 @@ var aggregateSeriesPointsByTime = function(settings,seriesArray){
 					break;
 				case "round-to-minutes-5":
 					timestampUnix.setSeconds(0);
-					timestampUnix.setMinutes(roundTo(timestampUnix.getMinutes(), 5));
+					timestampUnix.setMinutes(roundUpTo(timestampUnix.getMinutes(), 5));
 					break;
 				case "round-to-minutes-10":
 					timestampUnix.setSeconds(0);
-					timestampUnix.setMinutes(roundTo(timestampUnix.getMinutes(), 10));
+					timestampUnix.setMinutes(roundUpTo(timestampUnix.getMinutes(), 10));
 					break;
 				case "round-to-minutes-20":
 					timestampUnix.setSeconds(0);
-					timestampUnix.setMinutes(roundTo(timestampUnix.getMinutes(), 20));
+					timestampUnix.setMinutes(roundUpTo(timestampUnix.getMinutes(), 20));
 					break;
 				case "round-to-minutes-30":
 					timestampUnix.setSeconds(0);
-					timestampUnix.setMinutes(roundTo(timestampUnix.getMinutes(), 30));
+					timestampUnix.setMinutes(roundUpTo(timestampUnix.getMinutes(), 30));
 					break;
 			}
 
