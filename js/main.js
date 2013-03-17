@@ -27,6 +27,8 @@ $(document).ready(function () {
 
 	// Enable the filter chart functionality
 	$('#filter-chart').click(function(ev){
+		ev.preventDefault();
+		
 		var startTime = $('#datetime-start-wrapper').data('datetimepicker').getDate();
 		var endTime = $('#datetime-end-wrapper').data('datetimepicker').getDate();
 		
@@ -35,9 +37,13 @@ $(document).ready(function () {
 		// Send off to be filtered
 		filterByTimestamp(startTime.getTime(), endTime.getTime(), function(tempSeriesArray){
 			
+			filterByLabelName(tempSeriesArray, $('#label-search').val(), function(tempSeriesArray){
+				
+				sortByTimeAndDisplay(tempSeriesArray);
+			});
 			
-			sortByTimeAndDisplay(tempSeriesArray);
 		});
+		return false;
 	});
 	
 	// Enable the next/previous buttons for cycling through series
@@ -241,6 +247,26 @@ var filterByTimestamp = function(startTime, endTime, callback){
 	// Wait for the worker to return
 	worker.onmessage = function (event) {
 		console.log("Worker return: filterByTimestamp"); //debug
+		
+		currentSelectionArray = JSON.parse(event.data);
+		callback(currentSelectionArray);
+	}
+	
+}
+
+var filterByLabelName = function(tempSeriesArray, searchQuery, callback){
+
+	worker.postMessage(JSON.stringify({
+		function: "filterByLabelName",
+		searchQuery: searchQuery,
+		value: tempSeriesArray
+	}));
+	
+	console.log("Worker sent: filterByLabelName"); //debug
+	
+	// Wait for the worker to return
+	worker.onmessage = function (event) {
+		console.log("Worker return: filterByLabelName"); //debug
 		
 		currentSelectionArray = JSON.parse(event.data);
 		callback(currentSelectionArray);

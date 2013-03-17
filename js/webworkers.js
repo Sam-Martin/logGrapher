@@ -22,7 +22,9 @@ self.addEventListener("message", function(ev){
 		case "filterByTime":
 			postMessage(JSON.stringify(filterByTime(data.value, data.startTime, data.endTime)));
 			break;	
-		
+		case "filterByLabelName":
+			postMessage(JSON.stringify(filterByLabelName(data.value, data.searchQuery)));
+			break;
 		default:
 			postMessage(JSON.stringify(data.value));
 			break;
@@ -45,6 +47,24 @@ function sortByTimestamp(a, b) {
 	return 0;
 }
 
+var filterByLabelName = function(inputSeriesArray, searchQuery){
+	var outputSeriesArray = [];
+	
+	if(searchQuery.length > 0){
+		// Loop through series
+		for(index in inputSeriesArray){
+			
+			var tempSeries = JSON.parse(JSON.stringify(inputSeriesArray[index])); // clone the seriesObj
+			if(tempSeries.name.toLowerCase().indexOf(searchQuery.toLowerCase()) >= 0){
+				// We found it! Add the series to the array
+				outputSeriesArray.push(tempSeries);
+			}
+		}
+		return outputSeriesArray;
+	}else{
+		return inputSeriesArray;
+	}
+}
 
 var filterByTime = function(inputSeries, startTime, endTime){
 	var outputSeriesArray = [];
