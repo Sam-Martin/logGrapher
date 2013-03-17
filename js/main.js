@@ -35,7 +35,6 @@ $(document).ready(function () {
 		// Send off to be filtered
 		filterByTimestamp(startTime.getTime(), endTime.getTime(), function(tempSeriesArray){
 			
-			console.log(JSON.parse(JSON.stringify(tempSeriesArray))); //debug
 			
 			sortByTimeAndDisplay(tempSeriesArray);
 		});
