@@ -22,3 +22,6 @@ input[type=submit] {
 .chart-options, .restricted-series-nav{
 	display:none;
 }
+#history-wrapper{
+	display:none;
+}

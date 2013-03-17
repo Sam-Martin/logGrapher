@@ -19,6 +19,11 @@ window.onload = load;
 
 $(document).ready(function () {
 
+	// Enable history header
+	$('#history-header').click(function(ev){
+		ev.preventDefault();$('#history-wrapper').slideToggle();
+	});
+
 	// Enable the filter chart functionality
 	$('#filter-chart').click(function(ev){
 		var startTime = $('#datetime-start-wrapper').data('datetimepicker').getDate();
