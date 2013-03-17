@@ -1,9 +1,14 @@
 var tempCSVArray = [];
+var earliestTimestamp;
+var latestTimestamp;
 
 var createSeriesObj = function(settings, csvRows){
 	var count =0; //debug
 	seriesByName = {}
-	 
+	var earliestTimestamp;
+	var latestTimestamp;
+	
+	
 	// Loop through the rows and aggregate the series (defined by 'labels') into objects
 	for(key in csvRows){
 	
@@ -41,9 +46,13 @@ var createSeriesObj = function(settings, csvRows){
 
 			// Format Unix Timestamp
 			var timestampUnix
-
+			
 			timestampUnix = Date.UTC(timestamp.substr(6, 4), timestamp.substr(3, 2) - 1, timestamp.substr(0, 2), timestamp.substr(11, 2), timestamp.substr(14, 2), timestamp.substr(17, 2));
 
+			// Update latest/earliest timestamps as appropriate
+			earliestTimestamp = timestampUnix < earliestTimestamp | typeof(earliestTimestamp) == "undefined" ? timestampUnix : earliestTimestamp;
+			latestTimestamp  =  timestampUnix > latestTimestamp | typeof(latestTimestamp) == "undefined" ? timestampUnix : latestTimestamp;
+			
 
 			seriesByName[seriesName].push({
 				x: timestampUnix, 
@@ -53,7 +62,7 @@ var createSeriesObj = function(settings, csvRows){
 		}
 	};
 	console.log("Found "+count+" series"); //debug
-	return seriesByName;
+	return {seriesByName:seriesByName, earliestTimestamp: earliestTimestamp, latestTimestamp: latestTimestamp};
 }
 
 var parseCSV = function (data) {
@@ -142,8 +151,13 @@ var convertCSVArrayToChartObj = function(csvRows){
 	
 	
 	// Aggregate into an object by name
-	seriesByName = createSeriesObj(createSeriesObjSettings, csvRows);
+	seriesObjReturn  = createSeriesObj(createSeriesObjSettings, csvRows);
+	seriesByName = seriesObjReturn.seriesByName
 	
+	// Set start/end times
+	earliestTimestamp = seriesObjReturn.earliestTimestamp;
+	latestTimestamp = seriesObjReturn.latestTimestamp;
+	console.log("Earliest timestamp: "+ seriesObjReturn.earliestTimestamp + "\nLatestTimestamp: "+seriesObjReturn.latestTimestamp);
 	
 	// Reformat for HighCharts
 	$.each(seriesByName, function (seriesName, data) {
@@ -228,6 +242,22 @@ var convertCSVArrayToChartObj = function(csvRows){
 
 
 var sortByTimeAndDisplay = function(tempSeriesArray){
+
+	// Setup date/time picker
+	$('#datetime-start-wrapper').datetimepicker({
+		format: 'dd/MM/yyyy hh:mm:ss',
+		startDate: new Date(earliestTimestamp),
+		endDate: new Date(latestTimestamp)
+	});
+	$('#datetime-end-wrapper').datetimepicker({
+		format: 'dd/MM/yyyy hh:mm:ss',
+		startDate: new Date(earliestTimestamp),
+		endDate: new Date(latestTimestamp)
+	});
+	$('#datetime-start-wrapper').data('datetimepicker').setDate(new Date(earliestTimestamp));
+	$('#datetime-end-wrapper').data('datetimepicker').setDate(new Date(latestTimestamp));
+	
+	
 	// Aggregate by time
 	var workerFunction = null;
 	var aggregateSeriesPointsByTimeSettings;
@@ -275,9 +305,8 @@ var sortByTimeAndDisplay = function(tempSeriesArray){
 				var newSeriesStart = 0;
 				tempSeriesArray = seriesArray.slice(newSeriesStart,newSeriesStart+20);
 				
-				$('#restricted-series-nav h5').text("Displaying series " + newSeriesStart +" to "+(newSeriesStart+20));
+				$('.restricted-series-nav h5').text("Displaying series " + newSeriesStart +" to "+(newSeriesStart+20));
 				console.log("Restricting displayable serieses down to 20 from "+seriesArray.length);
-				$('#restricted-series-nav').show();
 			}
 			
 			

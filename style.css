@@ -12,22 +12,13 @@ form {
 }
 
 
-
-input, textarea, select{
-	display:block !important;
-}
-
-label, input, textarea, select{
+#datetime-start, #datetime-end{
 	height:30px;
 }
 
 input[type=submit] {
     clear:both;
 }
-#chart-options{
-	display:none;
-}
-
-#restricted-series-nav{
+.chart-options, .restricted-series-nav{
 	display:none;
 }

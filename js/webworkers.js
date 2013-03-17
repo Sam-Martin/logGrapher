@@ -14,12 +14,15 @@ self.addEventListener("message", function(ev){
 		case "aggregateSeries":
 			
 			// Send back the results
-			
 			postMessage(JSON.stringify(aggregateSeries(data.settings,data.value)));
 			break;
 		case "sortSeriesPointsByTime":
 			postMessage(JSON.stringify(sortSeriesPointsByTime(data.value)));
 			break;
+		case "filterByTime":
+			postMessage(JSON.stringify(filterByTime(data.value, data.startTime, data.endTime)));
+			break;	
+		
 		default:
 			postMessage(JSON.stringify(data.value));
 			break;
@@ -42,6 +45,29 @@ function sortByTimestamp(a, b) {
 	return 0;
 }
 
+
+var filterByTime = function(inputSeries, startTime, endTime){
+	var outputSeriesArray = [];
+	
+	// Loop through series
+	for(index in inputSeries){
+		
+		var tempSeries = JSON.parse(JSON.stringify(inputSeries[index])); // clone the seriesObj
+		tempSeries.data = []
+		// Loop through datapoints
+		for(i in inputSeries[index].data){
+			
+			// Check to see if it's timestamp is within the bounds
+			if(inputSeries[index].data[i].x > startTime & inputSeries[index].data[i].x < endTime){
+				 // All clear! Add to the array!
+				 tempSeries.data.push(inputSeries[index].data[i]);
+			}
+		}
+		// Push to the ouputSeriesArray
+		outputSeriesArray.push(tempSeries);
+	}
+	return outputSeriesArray
+}
 
 var sortSeriesPointsByTime = function(series){
 	

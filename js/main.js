@@ -19,6 +19,20 @@ window.onload = load;
 
 $(document).ready(function () {
 
+	// Enable the filter chart functionality
+	$('#filter-chart').click(function(ev){
+		var startTime = $('#datetime-start-wrapper').data('datetimepicker').getDate();
+		var endTime = $('#datetime-end-wrapper').data('datetimepicker').getDate();
+		
+		// Loading...
+		$("#container").html('<i class="icon-spinner icon-spin icon-large" id="loading"></i> <span>Loading</span>');
+		// Send off to be filtered
+		filterByTimestamp(seriesArray, startTime.getTime(), endTime.getTime(), function(tempSeriesArray){
+			
+			
+			renderChart(tempSeriesArray);
+		});
+	});
 	
 	// Enable the next/previous buttons for cycling through series
 	$('#previous-series').click(function(ev){
@@ -68,11 +82,11 @@ $(document).ready(function () {
 	// Check for pre-filled report
 	populateFormFromHash();
 
-	$("form").submit(function (ev) {
+	$("#input-form").submit(function (ev) {
 		ev.preventDefault();
 		  
 		// Display Container(s)
-		$('#container,#chart-options').show(); 
+		$('#container,.chart-options').show(); 
 
 		// Update the hash
 		updateHash();
@@ -81,7 +95,7 @@ $(document).ready(function () {
 		  
 			 $('#container').height($('#chart-height').val());
 		}
-		$('form').slideUp();
+		$('#input-form').slideUp();
 		$("#container").html('<i class="icon-spinner icon-spin icon-large" id="loading"></i> <span>Loading</span>');
 		
 		// Fetch local CSV example: http://jsfiddle.net/CnJYR/
@@ -207,12 +221,32 @@ $(document).ready(function () {
 	var amountToTrim = (json.length-1)-json.lastIndexOf(']');
 	return json.slice(json, json.length-amountToTrim);
  }
+
+var filterByTimestamp = function(tempSeriesArray, startTime, endTime, callback){
+
+	worker.postMessage(JSON.stringify({
+		function: "filterByTime",
+		startTime: startTime,
+		endTime: endTime,
+		value: tempSeriesArray
+	}));
+	
+	
+	// Wait for the worker to return
+	worker.onmessage = function (event) {
+		console.log("Worker return"); //debug
+		
+		tempSeriesArray = JSON.parse(event.data);
+		callback(tempSeriesArray);
+	}
+	
+}
  
  var changeDisplayedSeries = function(newSeriesStart){
 	var numSeriesDisplayed = parseInt($('#num-series-displayed').val());
 	tempSeriesArray = seriesArray.slice(newSeriesStart,newSeriesStart+numSeriesDisplayed);
 	console.log("Displaying series " + newSeriesStart +" to "+(newSeriesStart+numSeriesDisplayed));
-	$('#restricted-series-nav h5').text("Displaying series " + newSeriesStart +" to "+(newSeriesStart+numSeriesDisplayed) +" of " +seriesArray.length);
+	$('.restricted-series-nav h5').text("Displaying series " + newSeriesStart +" to "+(newSeriesStart+numSeriesDisplayed) +" of " +seriesArray.length);
 	
 	renderChart(tempSeriesArray);
 	
@@ -247,10 +281,6 @@ $(document).ready(function () {
  }
   
   var renderChart = function (series1) {
-  
-	
-     
-	
 	
 	
     // Initialise chart

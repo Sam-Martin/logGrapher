@@ -3,11 +3,17 @@
 		<link href="http://netdna.bootstrapcdn.com/font-awesome/3.0.2/css/font-awesome.css" rel="stylesheet" media="screen">
 		<link href="http://netdna.bootstrapcdn.com/twitter-bootstrap/2.3.0/css/bootstrap-combined.min.css" rel="stylesheet" media="screen">
 		<link href="style.css" rel="stylesheet" media="screen">
+		<link rel="stylesheet" type="text/css" media="screen" href="http://tarruda.github.com/bootstrap-datetimepicker/assets/css/bootstrap-datetimepicker.min.css">
 		<title>Log Grapher</title>
 	 </head>
 	<body>
-		<h1>Log Grapher v0.21 <small> - <a href="http://samuelmartin.wordpress.com">Sam Martin</a></small></h1>
+		<h1>Log Grapher v0.22 <small> - <a href="http://samuelmartin.wordpress.com">Sam Martin</a></small></h1>
 		<h4>Only in Chrome, Firefox or IE10.</h4>
+		<h5>New in v0.22</h5>
+		<ul>
+			<li>Reworked form rendering</li>
+			<li>Filter points by time to improve performance</li>
+		</ul>
 		<h5>New in v0.21</h5>
 		<ul>
 			<li>CSV parsing now utilises web workers</li>
@@ -28,19 +34,18 @@
 					<li><a href="http://twitter.github.com/bootstrap/">Twitter Bootstrap</a></li>
 					<li><a href="https://code.google.com/p/google-api-javascript-client/">Google Short URL</a></li>
 					<li><a href="https://code.google.com/p/jslzjb/">jslzjb</a></li>
+					<li><a href="http://jdewit.github.com/bootstrap-timepicker/">Bootstrap Timepicker</a></li>
 				</ul>
 			</div>
 		</div>
 
 			
-		<form>
 		
 			 <h2>Chart</h2>
-		<div class="row-fluid">
-			<div class="span6">
-				<label for="chart-type">type</label>
-			</div>
-			<div class="span6">
+		<form class="form-horizontal" id="input-form">
+		<div class="control-group">
+			<label class="control-label"  for="chart-type">type</label>
+			<div class="controls">
 				<select id="chart-type" name="chart-type">
 					<option value="spline">spline</option>
 					<option value="line">line</option>
@@ -49,28 +54,31 @@
 				</select>
 			</div>
 		</div>
+	
 		<h2>Columns<br/><small>(starts at 0)</small></h2>
-		<div class="row-fluid">
-			<div class="span6">
-				<label for="timestamp-index">timeStamp col number</label>
-				<label for="value-index">value col number</label>
-				<label>label col number</label>
-			</div>
-			<div class="span6">
+		<div class="control-group">
+			<label class="control-label" for="timestamp-index">timeStamp col number</label>
+			<div class="controls">
 				<input type="text" id="timestamp-index" name="timestamp-index" value="2" class="input-mini" />
-				<input type="text" id="value-index" name="value-index" value="4" class="input-mini" />
-				<input type="text" id="label-index" name="label-index" value="0" class="input-mini" />						
 			</div>
 		</div>
-		<h2>Data Manipulation</h2>
-		<div class="row-fluid">
-			<div class="span6">
-				<label for="granularity">granularity</label>
-				<label for="time-aggregation-method">time aggregation method</label>
-				<label for="aggregate-labels">aggregate labels<br/></label>
-				<label for="label-aggregation-method">label aggregation method</label>
+		<div class="control-group">
+			<label class="control-label" for="value-index">value col number</label>
+			<div class="controls">
+				<input type="text" id="value-index" name="value-index" value="4" class="input-mini" />
 			</div>
-			<div class="span6">
+		</div>
+		<div class="control-group">
+			<label class="control-label" for="label-index">label col number</label>
+			<div class="controls">
+			<input type="text" id="label-index" name="label-index" value="0" class="input-mini" />		
+			</div>
+		</div>
+		
+		<h2>Data Manipulation</h2>
+		<div class="control-group">
+			<label  class="control-label" for="granularity">granularity</label>
+			<div class="controls">
 				<select id="granularity" name="granularity">
 					<option value="unchanged">unchanged</option>
 					<option value="minute">1 minute</option>
@@ -81,12 +89,27 @@
 					<option value="hour">hour</option>
 					<option value="day">day</option>
 				</select>
+			</div>
+		</div>
+		<div class="control-group">
+			<label class="control-label"  for="time-aggregation-method">time aggregation method</label>
+			<div class="controls">
 				<select id="time-aggregation-method" name="time-aggregation-method">
 					<option value="average">average</option>
 					<option value="add">add</option>
 					<option value="top">top</option>
 				</select>
+			</div>
+		</div>
+		<div class="control-group">
+			<label class="control-label"  for="aggregate-labels">aggregate labels<br/></label>
+			<div class="controls">
 				<input type="checkbox" name="aggregate-labels" id="aggregate-labels"/>
+			</div>
+		</div>
+		<div class="control-group">
+			<label class="control-label"  for="label-aggregation-method">label aggregation method</label>
+			<div class="controls">
 				<select id="label-aggregation-method" name="label-aggregation-method">
 					<option value="average">average</option>
 					<option value="add">add</option>
@@ -95,24 +118,20 @@
 			</div>
 		</div>
 		
-		<h2>Formatting</h2>
 		
-		<div class="row-fluid">
-			<div class="span6">
-				<label for="chart-height">Chart Height</label>  
-			</div>
-			<div class="span6">
+		<h2>Formatting</h2>
+		<div class="control-group">
+				<label class="control-label"  for="chart-height">Chart Height</label>  
+			<div class="controls">
 				<input type="text" id="chart-height" name="chart-height" value="" />
 			</div>      
 		</div>
 		
 		<h2>Input</h2>
 		
-		<div class="row-fluid">
-			<div class="span6">
-				<label title="Host on Google Docs and paste public CSV Link">CSV URL</label>
-			</div>
-			<div class="span6">
+		<div class="control-group">
+			<label class="control-label" title="Host on Google Docs and paste public CSV Link">CSV URL</label>
+			<div class="controls">
 				<input type="text" id="csvURL" name="csvURL" value="" />
 			</div>
 		</div>
@@ -121,11 +140,9 @@
 				<h5 >And<br/><small>Optional</small></h5>
 			</div>
 		</div>
-		<div class="row-fluid">
-			<div class="span6">
-				<label>JSON URL</label>
-			</div>
-			<div class="span6">
+		<div class="control-group">
+			<label class="control-label" for="jsonURL">JSON URL</label>
+			<div class="controls">
 				<input type="text" id="jsonURL" name="jsonURL" value="" />
 			</div>
 		</div>
@@ -134,39 +151,65 @@
 				<h3>Or</h3>
 			</div>
 		</div>
-		<div class="row-fluid">
-			<div class="span6">
-				<label>Local CSV</label>
-			</div>
-			<div class="span6">
+		<div class="control-group">
+			<label class="control-label"  for="local-csv">Local CSV</label>
+			<div class="controls">
 				<input type="file" name="local-csv" id="local-csv" />
 			</div>
 		</div>
 			<input type="submit" class="btn btn-primary" value="Go" />
 		</form>
 		
-		<div class="row-fluid" id="restricted-series-nav">
-			<div class="span3">
+		<!-- Chart Options -->
+		<div class="row-fluid chart-options">
+			<div class="span2 restricted-series-nav">
 				<div class="btn-group">
 					<button class="btn" id="previous-series">Previous  series</button>
 					<button class="btn" id="next-series">Next  series</button>
 				</div>
 				
 			</div>
-			<div class="span2 text-right">
-				<label for="num-series-displayed">No. Series Displayed:</label>
+			<div class="span2 restricted-series-nav">
+				<form class="form-inline">
+				
+					<label for="num-series-displayed">No. Series Displayed:</label>
+					<input type="text" class="input-mini" name="num-series-displayed" id="num-series-displayed" value="20"/>
+					
+				</form>
+			</div>
+			<div class="span2">
+				<form class="form-inline">
+					<label for="datetime-start">Start:</label>
+					<div id="datetime-start-wrapper" class="input-append date">
+						<input type="text" id="datetime-start"></input>
+						<span class="add-on">
+							<i data-time-icon="icon-time" data-date-icon="icon-calendar"></i>
+						</span>
+					</div>
+				
+				</form>	
+			
+			</div>
+			<div class="span2">
+				<form class="form-inline">
+					<label  for="datetime-end">End:</label>
+					
+					<div id="datetime-end-wrapper" class="input-append date">
+						<input type="text" id="datetime-end"></input>
+						<span class="add-on">
+							<i data-time-icon="icon-time" data-date-icon="icon-calendar"></i>
+						</span>
+					</div>
+				</form>
 			</div>
 			<div class="span1">
-				<input type="text" class="input-mini" name="num-series-displayed" id="num-series-displayed" value="20"/>
-			</div>
-			<div class="span6 text-right">
-				<h5></h5>
+				<input type="button" class="btn btn-primary" value="Go" id="filter-chart"/>
 			</div>
 		</div>
 		<div id="container"></div>
 			
 		</div>
-		 <div class="navbar" id="chart-options">
+		 <div class="navbar chart-options">
 			<div class="navbar-inner">
 				<a class="brand" href="#">Chart:</a>
 				<ul class="nav">
@@ -195,6 +238,9 @@
 		<script src="http://netdna.bootstrapcdn.com/twitter-bootstrap/2.3.0/js/bootstrap.min.js"></script>
 		<script src="https://apis.google.com/js/client.js"> </script>
 		<script src="js/Iuppiter.js"> </script>
+		<script type="text/javascript" src="http://tarruda.github.com/bootstrap-datetimepicker/assets/js/bootstrap-datetimepicker.min.js">
+		</script>
+   
 		
 		<!-- Custom JS -->
 		<script src="js/main.js"></script>
