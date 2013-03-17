@@ -287,12 +287,17 @@ var sortByTimeAndDisplay = function(tempSeriesArray){
 	worker.onmessage = function (event) {
 		console.log("Worker return"); //debug
 		
-			tempSeriesArray = JSON.parse(event.data);
+		tempSeriesArray = JSON.parse(event.data);
 		// Sort by time
 		sortByTime(tempSeriesArray,function(tempSeriesArray){
 				
-			// Commit our temporary array to the permanent variable
-			seriesArray = tempSeriesArray;
+			// Clone our temporary array to the permanent variable (if not already set)
+			if(typeof(seriesArray) == "undefined"){
+				seriesArray =  JSON.parse(JSON.stringify(tempSeriesArray));
+			}
+			
+			// Clone our temporary array to be the current selection
+			currentSelectionArray = JSON.parse(JSON.stringify(tempSeriesArray));
 			
 			// Create link to download chart data
 			$('#download-element').attr("download", "graph.json").attr('href','data:textcharset=utf-8,'+encodeURI(JSON.stringify(seriesArray)));
@@ -303,10 +308,10 @@ var sortByTimeAndDisplay = function(tempSeriesArray){
 			// More than twenty series causes major problems
 			if(tempSeriesArray.length > 20){
 				var newSeriesStart = 0;
-				tempSeriesArray = seriesArray.slice(newSeriesStart,newSeriesStart+20);
+				tempSeriesArray = currentSelectionArray.slice(newSeriesStart,newSeriesStart+20);
 				
 				$('.restricted-series-nav h5').text("Displaying series " + newSeriesStart +" to "+(newSeriesStart+20));
-				console.log("Restricting displayable serieses down to 20 from "+seriesArray.length);
+				console.log("Restricting displayable serieses down to 20 from "+currentSelectionArray.length);
 			}
 			
 			

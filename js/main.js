@@ -3,9 +3,10 @@ var hostAverage;
 var perVM;
 var worker = new Worker('js/webworkers.js');
 var csvWorker = new Worker('js/csvParserWorker.js');
-var seriesArray = [];
+var seriesArray;
 var displayableStart = 0;
 var chartName;
+var currentSelectionArray;
 
 function load()
 {
@@ -32,10 +33,11 @@ $(document).ready(function () {
 		// Loading...
 		$("#container").html('<i class="icon-spinner icon-spin icon-large" id="loading"></i> <span>Loading</span>');
 		// Send off to be filtered
-		filterByTimestamp(seriesArray, startTime.getTime(), endTime.getTime(), function(tempSeriesArray){
+		filterByTimestamp(startTime.getTime(), endTime.getTime(), function(tempSeriesArray){
 			
+			console.log(JSON.parse(JSON.stringify(tempSeriesArray))); //debug
 			
-			renderChart(tempSeriesArray);
+			sortByTimeAndDisplay(tempSeriesArray);
 		});
 	});
 	
@@ -227,29 +229,29 @@ $(document).ready(function () {
 	return json.slice(json, json.length-amountToTrim);
  }
 
-var filterByTimestamp = function(tempSeriesArray, startTime, endTime, callback){
+var filterByTimestamp = function(startTime, endTime, callback){
 
 	worker.postMessage(JSON.stringify({
 		function: "filterByTime",
 		startTime: startTime,
 		endTime: endTime,
-		value: tempSeriesArray
+		value: seriesArray
 	}));
 	
 	
 	// Wait for the worker to return
 	worker.onmessage = function (event) {
-		console.log("Worker return"); //debug
+		console.log("Worker return: filterByTimestamp"); //debug
 		
-		tempSeriesArray = JSON.parse(event.data);
-		callback(tempSeriesArray);
+		currentSelectionArray = JSON.parse(event.data);
+		callback(currentSelectionArray);
 	}
 	
 }
  
  var changeDisplayedSeries = function(newSeriesStart){
 	var numSeriesDisplayed = parseInt($('#num-series-displayed').val());
-	tempSeriesArray = seriesArray.slice(newSeriesStart,newSeriesStart+numSeriesDisplayed);
+	var tempSeriesArray = currentSelectionArray.slice(newSeriesStart,newSeriesStart+numSeriesDisplayed);
 	console.log("Displaying series " + newSeriesStart +" to "+(newSeriesStart+numSeriesDisplayed));
 	$('.restricted-series-nav h5').text("Displaying series " + newSeriesStart +" to "+(newSeriesStart+numSeriesDisplayed) +" of " +seriesArray.length);
 	
