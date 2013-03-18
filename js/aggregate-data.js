@@ -311,14 +311,14 @@ var sortByTimeAndDisplay = function(tempSeriesArray){
 			// More than twenty series causes major problems
 			if(tempSeriesArray.length > 20){
 				var newSeriesStart = 0;
-				currentSelectionArray = currentSelectionArray.slice(newSeriesStart,newSeriesStart+20);
+				tempArray = currentSelectionArray.slice(newSeriesStart,newSeriesStart+20);
 				
 				$('.restricted-series-nav h5').text("Displaying series " + newSeriesStart +" to "+(newSeriesStart+20));
 				console.log("Restricting displayable serieses down to 20 from "+seriesArray.length);
 			}
 			
 			
-			renderChart(currentSelectionArray);
+			renderChart(tempArray);
 		});
 	}
  }
