@@ -184,6 +184,7 @@ var convertCSVArrayToChartObj = function(csvRows){
 		
 	}
 	
+	console.log(JSON.parse(JSON.stringify(tempSeriesArray))); //debug
 	// Send off a web worker
 	$("#container > span").html('Aggregating Series...');
 	
@@ -225,10 +226,38 @@ var convertCSVArrayToChartObj = function(csvRows){
 					tempSeriesArray.push(jsonSeries);
 				});
 				
+				// If we've been asked to, aggregate all the plotlines into one
+				if ($('#aggregate-labels').is(':checked')) {
+				
+					aggregateSeriesSettings = {
+						labelAggregationMethod: $('#label-aggregation-method').val(),
+						chartType: $('#chart-type').val()
+					}
+					
+					workerFunction = "aggregateSeries";
+					
+				}
+				
+				// Send off a web worker
+				$("#container > span").html('Aggregating Series...');
+				
+				worker.postMessage(JSON.stringify({
+					function: workerFunction,
+					settings: aggregateSeriesSettings,
+					value: tempSeriesArray
+				}));
 				
 				
-				// Sort by time
-				sortByTimeAndDisplay(tempSeriesArray);
+				// Wait for the worker to return
+				worker.onmessage = function (event) {
+					
+					console.log("Worker return"); //debug
+					
+					tempSeriesArray = JSON.parse(event.data);
+				
+					// Sort by time
+					sortByTimeAndDisplay(tempSeriesArray);
+				}
 		   });
 		}else{
 			
@@ -298,7 +327,7 @@ var sortByTimeAndDisplay = function(tempSeriesArray){
 			
 			// Clone our temporary array to be the current selection
 			currentSelectionArray = JSON.parse(JSON.stringify(tempSeriesArray));
-			
+			tempArray =  currentSelectionArray
 			console.log("After sorting by time"); //debug
 			
 			

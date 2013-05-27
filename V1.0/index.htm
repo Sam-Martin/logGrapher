@@ -1,0 +1,127 @@
+<html>
+	<head>
+		<link href="http://netdna.bootstrapcdn.com/font-awesome/3.0.2/css/font-awesome.css" rel="stylesheet" media="screen">
+		<link href="css/bootstrap.min.css" rel="stylesheet" media="screen">
+		<link href="css/style.css" rel="stylesheet" media="screen">
+		<title>LogGrapher.com</title>
+	 </head>
+	<body>
+		<header>
+			<h2 class="pull-right"><small>v0.4</small></h2>
+			<h1>LogGrapher.com &nbsp;<small> <a href="http://samuelmartin.wordpress.com">Sam Martin</a></small></h1>
+		</header>
+		
+		<div class="navbar">
+			<div class="navbar-inner">
+				<a class="brand" href="#"># Nav</a>
+				<ul class="nav">
+					<li class="active"><a href="#">Home</a></li>
+					<li><a href="#">Graph It!</a></li>
+					<li><a href="#">FAQ</a></li>
+					<li><a href="#">Frameworks</a></li>
+				</ul>
+			</div>
+		</div>
+		
+		<div class="hero-unit">
+			<h1>Got a log? Graph it!</h1>
+			<p>
+				Trying to trend entries in an individual log file can be hard. Excel wants rows by time and columns by entity; but you've got one line per time, per entity!
+				What are you going to do? LogGrapher.com!
+			</p>
+			 <a class="btn btn-primary btn-large" onClick="startGraphing()">
+			  Start Graphing
+			</a>
+		</div>
+		
+		<main>
+			
+			
+			
+			<div class="well" id="log-sources-well">
+				
+				<div id="log-sources-header">
+					
+				
+					<h2>Log Sources</h2>
+					<p>Here you can specify one or more URLs or files to use as log sources. Valid formats are .CSV and <abbr title="As downloaded from LogGrapher.com">.LOGG </abbr>.</p>
+				</div>
+				
+				<div id="log-sources-settings-modal" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="log-sources-settings-modal-label" aria-hidden="true">
+					<div class="modal-header">
+						<button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+						<h3 id="log-sources-settings-modal-label">Log Source Settings</h3>
+					</div>
+					<div class="modal-body">
+						<h1>Select Columns</h1>
+						<table class="table table-bordered">
+							<thead>
+								<tr>
+									<td>#1</td>
+									<td>#2</td>
+								</tr>
+							</thead>
+							<tbody>
+								<tr>
+									<td>01/02/2013</td>
+									<td>Potato</td>
+								</tr>
+							</tbody>
+						</table>
+					</div>
+					<div class="modal-footer">
+						<button class="btn" data-dismiss="modal" aria-hidden="true">Close</button>
+						<button class="btn btn-primary">Save changes</button>
+					</div>
+				</div>
+				
+				<ol id="log-sources-wrapper">
+					<li class="log-sources" style="display:none;">					
+						<ul>
+							<li>
+								<button class="btn btn-danger" onClick="deleteLogSource(event)"><i class="icon-trash"></i></button>
+								<button class="btn btn-primary" onClick="configureLogSource(event)"><i class="icon-wrench"></i></button>
+							</li>
+							<li>
+								<div class="btn-group">
+									<button class="btn" onClick="toggleUrlFileInput(event, 'url')">URL</button>
+									<button class="btn btn-inverse" onClick="toggleUrlFileInput(event, 'file')">File</button>
+								</div>
+							</li>
+							
+							<li class="log-sources-source-url control-group">
+								<label class="control-label">URL:
+									<input type="text" name="logURL" onChange="fetchLogSourcePreview(event)"/>
+								</label>
+							</li>
+							<li class="log-sources-source-file control-group">
+								<label class="control-label">
+									<input type="file" name="logFile" onChange="fetchLogSourcePreview(event)"/>
+								</label>
+							</li>
+							
+						</ul>
+					</li>
+				</ol>
+				<button id="log-sources-add-button" class="btn" onClick="addLogSource()"><i class="icon-plus"></i> Add Source</button>
+				<button class="btn btn-warning" id="log-sources-delete-source-button" style="display:none;">Undo</button>
+				<button class="btn-primary btn-large pull-right"><i class="icon-ok"></i> Graph</button>
+				<div class="clearfix"></div>
+			</div>
+			
+		</main>
+		
+		<!-- JS Frameworks & Plugins -->
+		<script src="http://code.jquery.com/jquery.min.js"></script>
+		<script src="js/jquery.csv-0.71.min.js"></script>
+		<script src="http://code.highcharts.com/highcharts.js"></script>
+		<script src="http://netdna.bootstrapcdn.com/twitter-bootstrap/2.3.0/js/bootstrap.min.js"></script>
+		<script src="https://apis.google.com/js/client.js"> </script>
+		
+		
+   
+		
+		<!-- Custom JS -->
+		<script src="js/main.js"></script>
+	</body>
+</html>

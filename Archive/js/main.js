@@ -200,14 +200,54 @@ $(document).ready(function () {
 			$("#container > span").html('Fetching JSON...');
 			
 			// Fetch the specified json
-			$.getJSON($('#jsonURL').val(),function(tempSeriesArray){
+			$.getJSON($('#jsonURL').val(),function(jsonData){
+				tempSeriesArray = [];
+				// Add each series to the list
+				$.each(jsonData, function(index, jsonSeries){
+					// Customise the series
+					jsonSeries.type = $('#chart-type').val();
+					jsonSeries.yAxis = 1;
+					
+					
+					
+					tempSeriesArray.push(jsonSeries);
+				});
+				
+				workerFunction = null;
+				// If we've been asked to, aggregate all the plotlines into one
+				if ($('#aggregate-labels').is(':checked')) {
+				
+					aggregateSeriesSettings = {
+						labelAggregationMethod: $('#label-aggregation-method').val(),
+						chartType: $('#chart-type').val()
+					}
+					
+					workerFunction = "aggregateSeries";
+					
+				}
+				
+				// Send off a web worker
+				$("#container > span").html('Aggregating Series...');
+				
+				worker.postMessage(JSON.stringify({
+					function: workerFunction,
+					settings: aggregateSeriesSettings,
+					value: tempSeriesArray
+				}));
+				console.log(JSON.parse(JSON.stringify([tempSeriesArray]))); //debug
+				
+				// Wait for the worker to return
+				worker.onmessage = function (event) {
+					
+					console.log("Worker return"); //debug
+					
+					tempSeriesArray = JSON.parse(event.data);
 				
 				
-				
-				
-				
-				// Sort by time
-				sortByTimeAndDisplay(tempSeriesArray);
+					console.log(JSON.parse(JSON.stringify(tempSeriesArray))); //debug
+					// Sort by time
+					sortByTimeAndDisplay(tempSeriesArray);
+				}
 		   }); 
 		}else{
 			alert("Please enter a datasource"); //debug
@@ -318,7 +358,13 @@ var filterByLabelName = function(tempSeriesArray, searchQuery, callback){
     // Initialise chart
     chart = new Highcharts.Chart({
         plotOptions: {
-			
+			column: {
+					stacking: 'normal',
+					dataLabels: {
+						enabled: true,
+						color: (Highcharts.theme && Highcharts.theme.dataLabelsColor) || 'white'
+					}
+				},
              series: {
                 //enableMouseTracking: false,
                 marker: {
@@ -358,7 +404,7 @@ var filterByLabelName = function(tempSeriesArray, searchQuery, callback){
               title: {
                   text: ""
               },
-			
+				
               labels: {
                   formatter: function () {
                       return this.value;

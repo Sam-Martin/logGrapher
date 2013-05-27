@@ -199,11 +199,17 @@ var aggregateDatapointArray = function(datapointArray, aggregationType){
 	var aggr;
 	var top = 0;
 	
+	var numExecutions =0;//debug
+	
 	// Loop through and figure out the highest value and the total of all values
 	for (var x = 0; x < datapointArray.length; x++) {
 		
-	  sum += parseInt(datapointArray[x].y); // .y because its properties are x and y!
-	  top = (datapointArray[x].y > top) ? parseInt(datapointArray[x].y) : top;
+		// Check it's a number
+		if(!isNaN(parseFloat(datapointArray[x].y)) && isFinite(datapointArray[x].y)){
+			numExecutions++;
+			sum += parseInt(datapointArray[x].y); // .y because its properties are x and y!
+			top = (datapointArray[x].y > top) ? parseInt(datapointArray[x].y) : top;
+		}
 	}
 	
 	switch (aggregationType) {
@@ -214,7 +220,7 @@ var aggregateDatapointArray = function(datapointArray, aggregationType){
 			break;
 		case "add":
 
-			aggr = sum;
+			aggr = sum ;
 			break;
 		case "top":
 			
