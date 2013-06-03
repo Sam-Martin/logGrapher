@@ -69,6 +69,10 @@ function deleteLogSource(ev){
 	// Unbind any previous clicks
 	undoButton = $('#log-sources-delete-source-button').fadeIn().unbind("click");
 	
+	// Stop the undo button being hidden prematurely
+	clearInterval(undoButton.data('timer'));
+	
+	
 	// Bind undo action to undo button
 	undoButton.click(function(){
 		
@@ -94,14 +98,15 @@ function deleteLogSource(ev){
 	});
 	
 	// After the specified amount of time, if the deletion hasn't been cancelled, remove it permanently
-	setTimeout(function(){
-		
-		if(lastDeletedLogSource.data('pendingDeletion')){
-			lastDeletedLogSource.remove();
-			// Remove the undo button
-			undoButton.fadeOut();
-		}
-	}, undoTimer);
+	undoButton.data('timer', setTimeout(function(){
+			
+			if(lastDeletedLogSource.data('pendingDeletion')){
+				lastDeletedLogSource.remove();
+				// Remove the undo button
+				undoButton.fadeOut();
+			}
+		}, undoTimer)
+	);
 	
 }
 
