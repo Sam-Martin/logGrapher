@@ -77,10 +77,19 @@ main{
 	height:auto;
 }
 
+#log-sources-settings-modal th{
+	text-align:center;
+}
+
 /*
 	Common CSS
 */
 
+body .modal{
+	width:80%;
+	left:10%;
+	margin-left:0;
+}
 
 main, li.log-sources-source-url{
 	display:none;

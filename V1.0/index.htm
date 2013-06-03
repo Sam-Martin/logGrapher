@@ -23,6 +23,8 @@
 			</div>
 		</div>
 		
+		
+		
 		<div class="hero-unit">
 			<h1>Got a log? Graph it!</h1>
 			<p>
@@ -53,12 +55,13 @@
 						<h3 id="log-sources-settings-modal-label">Log Source Settings</h3>
 					</div>
 					<div class="modal-body">
-						<h1>Select Columns</h1>
-						<table class="table table-bordered">
+						<h3>Select Columns</h3>
+						<p>Pick which column corresponds with the label of the line(s) to be graphed, the value to graph on the vertical axis and the timestamp to graph on the horizontal axis</p>
+						<table class="table table-bordered table-condensed">
 							<thead>
 								<tr>
-									<td>#1</td>
-									<td>#2</td>
+									<th>#1</th>
+									<th>#2</th>
 								</tr>
 							</thead>
 							<tbody>
@@ -80,7 +83,7 @@
 						<ul>
 							<li>
 								<button class="btn btn-danger" onClick="deleteLogSource(event)"><i class="icon-trash"></i></button>
-								<button class="btn btn-primary" onClick="configureLogSource(event)"><i class="icon-wrench"></i></button>
+								<button class="btn configureLogSource" onClick="configureLogSource(event)"><i class="icon-wrench"></i></button>
 							</li>
 							<li>
 								<div class="btn-group">
