@@ -199,7 +199,8 @@ function configureLogSource(ev){
 	// Tie the modal to the current log source
 	modal.data('logSourceRow', logSourceRow);
 
-	
+	// Show/hide buttons as appropriate
+	displayLogSourceConfigButtons(logSourceRow, logPreviewTable.find('thead'));
 }
 
 // Handle assignment of log source property (e.g. the user has selected a column as timestamp)
@@ -209,11 +210,10 @@ function selectLogSourceProperty(ev){
 	var property = formElement.val();
 	var logSourceRow = $('#log-sources-settings-modal').data('logSourceRow');
 	var headerRow = formElement.parents('tr');
+	var logSourceAttribute = formElement.val();
 	
 	// Figure out which column this is
 	var columnIndex = formElement.parents('tr').find('th').index(formElement.parents('th'));
-	
-	var logSourceAttribute = formElement.val();
 	
 	// If this column is the currently selected column for this attribute, unselect it
 	if(logSourceRow.data('currentLogSource').config[logSourceAttribute] == columnIndex){
@@ -221,8 +221,6 @@ function selectLogSourceProperty(ev){
 		// Remove the selected index as the selected attribute (e.g. column 0 = timestamp)
 		logSourceRow.data('currentLogSource').config[logSourceAttribute] = -1;
 		
-		// Make this attribute button primary
-		formElement.removeClass('btn-primary');
 	}else{
 		
 		// Otherwise, select it as the column for this attribute
@@ -230,41 +228,41 @@ function selectLogSourceProperty(ev){
 		// Save the selected index as the selected attribute (e.g. column 0 = timestamp)
 		logSourceRow.data('currentLogSource').config[logSourceAttribute] = columnIndex;
 		
-		// Deselect this attribute
-		formElement.addClass('btn-primary');
 	}
 	
+	// Show/hide buttons as appropriate
+	displayLogSourceConfigButtons(logSourceRow, headerRow);
+}
+
+function displayLogSourceConfigButtons(logSourceRow, headerRow){
 	
-	
+	// Reset button-primary
+	headerRow.find('button.btn-primary').removeClass('btn-primary');
+	// Reset button visibility
+	headerRow.find('button').show();
 	
 	// Show/hide attribute selection buttons as appropriate
 	$.each(logSourceRow.data('currentLogSource').config, function(logSourceAttributeName, logSourceAttributeIndex){
 		
-		
-		
 		if(logSourceAttributeIndex != -1){
-			
-			// logSourceAttributeIndex is set, show the attribute in this column...
 			
 			// Increment the index by 1 so that it compensates for the blank <th> that is a spacer for the row ID
 			logSourceAttributeIndex++;
 			
-			headerRow.find('th:nth-child('+logSourceAttributeIndex+') button[value='+logSourceAttributeName+']').show();
+			// logSourceAttributeIndex is set, show the attribute in this column...
+			headerRow.find('th:nth-child('+logSourceAttributeIndex+') button[value='+logSourceAttributeName+']').addClass('btn-primary').show();
 			// but not in others
-			headerRow.find('th:not(:nth-child('+logSourceAttributeIndex+')) button[value='+logSourceAttributeName+']').hide();
+			headerRow.find('th:not(:nth-child('+logSourceAttributeIndex+')) button[value='+logSourceAttributeName+']').removeClass('btn-primary').hide();
 			// hide all other attributes in this column
-			headerRow.find('th:nth-child('+logSourceAttributeIndex+') button:not([value='+logSourceAttributeName+'])').hide();
+			headerRow.find('th:nth-child('+logSourceAttributeIndex+') button:not([value='+logSourceAttributeName+'])').removeClass('btn-primary').hide();
 		}else{
 			
 			// logSourceAttributeIndex show all buttons (except in cells with btn-primary (i.e. an attribute already assigned to this column))
-			headerRow.find('th:not(:has(button.btn-primary)) button[value='+logSourceAttributeName+']').show();
+			headerRow.find('th:not(:nth-child('+logSourceAttributeIndex+')):not(:has(button.btn-primary)) button[value='+logSourceAttributeName+']').show();
 		}
 	});
-	
-	
-	
-
 }
+
 
 function fetchLogSourcePreview(ev){
 
@@ -272,7 +270,7 @@ function fetchLogSourcePreview(ev){
 	var parent;
 	
 	// Add a spinner
-	formElement.parents('label').prepend('<i class="icon-spinner icon-spin pull-right"></i> '); //debug
+	formElement.parents('label').prepend('<i class="icon-spinner icon-spin pull-right"></i> ');
 
 	if(formElement.is(':file')){
 		
