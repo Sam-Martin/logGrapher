@@ -46,8 +46,18 @@ function toggleUrlFileInput(ev, type){
 // Add new log source
 function addLogSource(){
 	
+	// Model the log source data we're going to create
+	function logSourceDataModel(){
+		this.config = {
+			timestampIndex: -1,
+			valueIndex: -1,
+			labelIndex: -1
+		}
+	};
+		 
 	// Clone it 
 	$('#log-sources-wrapper > .log-sources:first').clone()
+		.data('currentLogSource', new logSourceDataModel) // Initialise the data
 		.appendTo('#log-sources-wrapper') // Add it into the form
 		.slideDown(); // Show it
 }
@@ -80,7 +90,7 @@ function deleteLogSource(ev){
 		lastDeletedLogSource.stop()
 			.data('pendingDeletion', false); // Cancel the pending deletion;
 		
-		// If there it's not yet detatched, just show it
+		// If there it's not yet detached, just show it
 		if(lastDeletedLogSource.parents('html').length > 0 ){
 			
 			// Unhide that log source
@@ -112,10 +122,13 @@ function deleteLogSource(ev){
 
 function configureLogSource(ev){
 	
+	var modal = $('#log-sources-settings-modal');
+	var logPreviewTable = modal.find('table');
 	
 	// Get logSourceRow
 	var logSourceRow = $(ev.srcElement).parents('.log-sources');
 	
+	// Check we have log preview data
 	if(!(logPreview = logSourceRow.data('logPreview'))){
 		
 		// Show error
@@ -159,30 +172,34 @@ function configureLogSource(ev){
 	logPreviewTableBody+='<tr class="warning">\r\n\t<td colspan="'+(longestRow+1)+'">Preview Only...</td>\r\n</tr>';
 	
 	// Input the table body
-	$('#log-sources-settings-modal tbody').html(logPreviewTableBody);
+	logPreviewTable.find('tbody').html(logPreviewTableBody);
 	
 	// Table Header
 	// Loop through the longest row and generate the header
-	logPreviewTableHeader = '<tr>\r\n\t<td>&nbsp;</td>\r\n';
+	logPreviewTableHeader = '<tr>\r\n\t<th>&nbsp;</th>\r\n';
 	for(var i=0; i<=longestRow-1;i++){
 		
 		logPreviewTableHeader += "\t<th>"+String.fromCharCode(i+65)+"<br/>\r\n";
 		// Add the selection buttons
 		logPreviewTableHeader += '<div class="btn-group btn-group-vertical" style="min-width:100px;width:100%">\r\n\t'+
-			'<button class="btn btn-block" value="Timestamp" onClick="selectLogSourceProperty(event)">Timestamp</button>\r\n\t'+
-			'<button class="btn btn-block" value="Value" onClick="selectLogSourceProperty(event)">Value</button>\r\n\t'+
-			'<button class="btn btn-block" value="Label" onClick="selectLogSourceProperty(event)">Label</button>\r\n</div>\r\n'+
+			'<button class="btn btn-block" value="timestampIndex" onClick="selectLogSourceProperty(event)">Timestamp</button>\r\n\t'+
+			'<button class="btn btn-block" value="valueIndex" onClick="selectLogSourceProperty(event)">Value</button>\r\n\t'+
+			'<button class="btn btn-block" value="labelIndex" onClick="selectLogSourceProperty(event)">Label</button>\r\n</div>\r\n'+
 			'</th>\r\n';
 	}
 	
 	logPreviewTableHeader+='</tr>';
 	
 	// Input the table Header
-	$('#log-sources-settings-modal thead').html(logPreviewTableHeader);	
+	logPreviewTable.find('thead').html(logPreviewTableHeader);	
 	
+	// Show Modal
+	modal.modal('show');
 	
+	// Tie the modal to the current log source
+	modal.data('logSourceRow', logSourceRow);
+
 	
-	$('#log-sources-settings-modal').modal('show');
 }
 
 // Handle assignment of log source property (e.g. the user has selected a column as timestamp)
@@ -190,28 +207,63 @@ function selectLogSourceProperty(ev){
 	
 	var formElement = $(ev.srcElement);
 	var property = formElement.val();
+	var logSourceRow = $('#log-sources-settings-modal').data('logSourceRow');
+	var headerRow = formElement.parents('tr');
 	
-	if(formElement.data('logSourceAttribute')){
+	// Figure out which column this is
+	var columnIndex = formElement.parents('tr').find('th').index(formElement.parents('th'));
+	
+	var logSourceAttribute = formElement.val();
+	
+	// If this column is the currently selected column for this attribute, unselect it
+	if(logSourceRow.data('currentLogSource').config[logSourceAttribute] == columnIndex){
+		
+		// Remove the selected index as the selected attribute (e.g. column 0 = timestamp)
+		logSourceRow.data('currentLogSource').config[logSourceAttribute] = -1;
+		
+		// Make this attribute button primary
+		formElement.removeClass('btn-primary');
+	}else{
+		
+		// Otherwise, select it as the column for this attribute
+		
+		// Save the selected index as the selected attribute (e.g. column 0 = timestamp)
+		logSourceRow.data('currentLogSource').config[logSourceAttribute] = columnIndex;
 		
 		// Deselect this attribute
-		formElement.removeClass('btn-primary');
-		
-		// Show the others!
-		formElement.parents('tr').find('button[value='+property+']').not(formElement).show();
-		
-		// Set its data property to deselected
-		formElement.data('logSourceAttribute', false);
-	}else{
-
-		// Make it primary
 		formElement.addClass('btn-primary');
-		
-		// Hide the others!
-		formElement.parents('tr').find('button[value='+property+']').not(formElement).hide();
-		
-		// Set its data property to selected
-		formElement.data('logSourceAttribute', true);
 	}
+	
+	
+	
+	
+	// Show/hide attribute selection buttons as appropriate
+	$.each(logSourceRow.data('currentLogSource').config, function(logSourceAttributeName, logSourceAttributeIndex){
+		
+		
+		
+		if(logSourceAttributeIndex != -1){
+			
+			// logSourceAttributeIndex is set, show the attribute in this column...
+			
+			// Increment the index by 1 so that it compensates for the blank <th> that is a spacer for the row ID
+			logSourceAttributeIndex++;
+			
+			headerRow.find('th:nth-child('+logSourceAttributeIndex+') button[value='+logSourceAttributeName+']').show();
+			// but not in others
+			headerRow.find('th:not(:nth-child('+logSourceAttributeIndex+')) button[value='+logSourceAttributeName+']').hide();
+			// hide all other attributes in this column
+			headerRow.find('th:nth-child('+logSourceAttributeIndex+') button:not([value='+logSourceAttributeName+'])').hide();
+		}else{
+			
+			// logSourceAttributeIndex show all buttons (except in cells with btn-primary (i.e. an attribute already assigned to this column))
+			headerRow.find('th:not(:has(button.btn-primary)) button[value='+logSourceAttributeName+']').show();
+		}
+	});
+	
+	
+	
+
 }
 
 function fetchLogSourcePreview(ev){
@@ -234,78 +286,7 @@ function fetchLogSourcePreview(ev){
 	}
 }
 
-function fetchLocalLogPreview(formElement, callback){
-	// Fetch preview from local file
-		
-	var startBytes = 0;
-	var endBytes = 500;
-	var files = formElement.get(0).files;
-	var reader = new FileReader();
-	
-	// Check there are files selected
-	if(files.length == 0){
-		return;
-	}
-	
-	// Get the first (hopefully only!) file
-	var file = files[0];
-	
-	
-	// Check our preview isn't longer than the actual file and just read to the end if it is
-	endBytes = (endBytes < file.size) ? endBytes : file.size;
 
-	// Once the slice has finished pass it on to the validation function
-	reader.onloadend = function(evt) {
-	  if (evt.target.readyState == FileReader.DONE) { // DONE == 2
-		
-		// Send the data to the callback
-		callback(evt.target.result, formElement);
-	  }
-	};
-	
-	// Fire off the slice
-	var blob = file.slice(startBytes, endBytes + 1);
-	reader.readAsBinaryString(blob);
-}
-
-function fetchURLLogPreview(formElement, callback){
-	
-	// Fetch a preview from a remote URL
-	var fileURL = formElement.val();
-	$.ajax(fileURL, {
-		
-		// Listen in on progress
-		xhr: function(){
-			var xhr = new window.XMLHttpRequest();
-
-			
-			// Check to see how many lines we have
-			xhr.addEventListener("progress", function(evt){
-				
-				try{
-					var numLines = (evt.srcElement.response).match(/[\r\n]/g).length;
-				}catch(e){return;}
-				
-				if(numLines > 1){
-				
-					// Okay, we've got a couple of lines of data, send it back to the callback for processing
-					callback(evt.srcElement.response, formElement);
-				}
-				
-				// Cancel the download, we don't need the whole thing, just the first few lines to show the user.
-				xhr.abort();
-				
-			}, false);
-			return xhr;
-		}, 
-		error: function(){
-			callback(false);
-			
-		}
-	})
-
-	
-}
 
 // Function that checks to see if the file the user has given us is a valid CSV
 function validateLogPreview(logPreview, formElement){

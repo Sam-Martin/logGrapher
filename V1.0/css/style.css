@@ -77,8 +77,18 @@ main{
 	height:auto;
 }
 
+#log-sources-settings-modal table{
+	width:auto;
+	margin:0 auto;
+}
+
 #log-sources-settings-modal th{
 	text-align:center;
+}
+#log-sources-settings-modal td{
+	max-width:200px;
+	overflow:hidden;
+	text-overflow:ellipsis;
 }
 
 /*
@@ -86,8 +96,8 @@ main{
 */
 
 body .modal{
-	width:80%;
-	left:10%;
+	width:50%;
+	left:25%;
 	margin-left:0;
 }
 
