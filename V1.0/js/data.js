@@ -70,3 +70,84 @@ function fetchURLLogPreview(formElement, callback){
 
 	
 }
+
+// Starting function once all logs have been assigned configuration values and are ready for processing
+function processLogSources(){
+	
+	// Loop through the log sources and process them one by one (not the first one though, that's a template)
+	$.each($('#log-sources-wrapper li.log-sources:not(:first)'), function(index, logSourceRow){
+		
+		logSourceRow = $(logSourceRow);
+		logSourceData = logSourceRow.data('logSource');
+		
+		// Determine whether it's a local file or a url
+		if(logSourceData.currentSource == "file"){
+			
+			console.log("Fetching file"); //debug
+			
+			fetchLogFromFile(logSourceRow, function(data){
+			
+				console.log(data); //debug
+			});
+			
+		}else if(logSourceData.currentSource == "url"){
+			
+		}
+		console.log(logSourceRow.data()); //debug
+	});
+}
+
+
+function fetchLogFromFile(logSourceRow, callback){
+
+	var files = logSourceRow.find('input[name=logFile]').get(0).files;
+		
+	// Check there are files selected
+	if(files.length == 0){
+		return;
+	}
+	
+	
+	// Build the string from the file in pieces, to prevent hanging
+	readLocalFileSlice(files[0], function(data){
+			console.log(data);
+		// Append 
+		$(logSourceRow).data('logSource').raw += data;
+		
+	});
+		
+	
+	
+}
+
+function readLocalFileSlice(file,  callback, startBytes, data){
+	
+	var chunkSliceSize = 2000;
+	var startBytes = typeof(startBytes) == "undefined" ? 0 : startBytes;
+	var endBytes = startBytes+chunkSliceSize;
+	var reader = new FileReader();
+	
+	// Check our slice doesn't go past the end of the file, just read to the end if it is
+	endBytes = (endBytes < file.size) ? endBytes : file.size;
+	
+	// Once the slice has finished pass it on to the validation function
+	reader.onloadend = function(evt) {
+	  if (evt.target.readyState == FileReader.DONE) { // DONE == 2
+		
+		
+		if(endBytes >= file.size){
+		
+			// Send the data to the callback
+			callback(data+evt.target.result);
+		}else{
+		
+			// Read the next section
+			readLocalFileSlice(file, callback, endBytes+chunkSliceSize,  data+evt.target.result);
+		}
+	  }
+	};
+	
+	// Fire off the slice
+	var blob = file.slice(startBytes, endBytes + 1);
+	reader.readAsBinaryString(blob);
+}

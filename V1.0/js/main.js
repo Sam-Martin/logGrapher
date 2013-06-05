@@ -34,9 +34,13 @@ function toggleUrlFileInput(ev, type){
 	$(ev.srcElement).addClass('btn-inverse');
 	
 	if(type=="url"){
+		
+		logSourceRow.data('logSource').currentSource = "url";
 		logSourceRow.find('.log-sources-source-url').css('display', 'inline-block');
 		logSourceRow.find('.log-sources-source-file').hide();
 	}else{
+		
+		logSourceRow.data('logSource').currentSource = "file";
 		logSourceRow.find('.log-sources-source-url').hide();
 		logSourceRow.find('.log-sources-source-file').css('display', 'inline-block');
 	}
@@ -48,16 +52,20 @@ function addLogSource(){
 	
 	// Model the log source data we're going to create
 	function logSourceDataModel(){
-		this.config = {
-			timestampIndex: -1,
-			valueIndex: -1,
-			labelIndex: -1
+		this.config ={
+			indices: {
+				timestampIndex: -1,
+				valueIndex: -1,
+				labelIndex: -1
+			}
 		}
+		this.currentSource = "file";
+		this.preview = null;
 	};
 		 
 	// Clone it 
 	$('#log-sources-wrapper > .log-sources:first').clone()
-		.data('currentLogSource', new logSourceDataModel) // Initialise the data
+		.data('logSource', new logSourceDataModel) // Initialise the data
 		.appendTo('#log-sources-wrapper') // Add it into the form
 		.slideDown(); // Show it
 }
@@ -129,7 +137,7 @@ function configureLogSource(ev){
 	var logSourceRow = $(ev.srcElement).parents('.log-sources');
 	
 	// Check we have log preview data
-	if(!(logPreview = logSourceRow.data('logPreview'))){
+	if(!(logPreview = logSourceRow.data('logSource').preview)){
 		
 		// Show error
 		elementAttachedPopover(ev.srcElement, "Error", "Please select a valid log source");
@@ -216,17 +224,17 @@ function selectLogSourceProperty(ev){
 	var columnIndex = formElement.parents('tr').find('th').index(formElement.parents('th'));
 	
 	// If this column is the currently selected column for this attribute, unselect it
-	if(logSourceRow.data('currentLogSource').config[logSourceAttribute] == columnIndex){
+	if(logSourceRow.data('logSource').config.indices[logSourceAttribute] == columnIndex){
 		
 		// Remove the selected index as the selected attribute (e.g. column 0 = timestamp)
-		logSourceRow.data('currentLogSource').config[logSourceAttribute] = -1;
+		logSourceRow.data('logSource').config.indices[logSourceAttribute] = -1;
 		
 	}else{
 		
 		// Otherwise, select it as the column for this attribute
 		
 		// Save the selected index as the selected attribute (e.g. column 0 = timestamp)
-		logSourceRow.data('currentLogSource').config[logSourceAttribute] = columnIndex;
+		logSourceRow.data('logSource').config.indices[logSourceAttribute] = columnIndex;
 		
 	}
 	
@@ -242,7 +250,7 @@ function displayLogSourceConfigButtons(logSourceRow, headerRow){
 	headerRow.find('button').show();
 	
 	// Show/hide attribute selection buttons as appropriate
-	$.each(logSourceRow.data('currentLogSource').config, function(logSourceAttributeName, logSourceAttributeIndex){
+	$.each(logSourceRow.data('logSource').config.indices, function(logSourceAttributeName, logSourceAttributeIndex){
 		
 		if(logSourceAttributeIndex != -1){
 			
@@ -251,8 +259,10 @@ function displayLogSourceConfigButtons(logSourceRow, headerRow){
 			
 			// logSourceAttributeIndex is set, show the attribute in this column...
 			headerRow.find('th:nth-child('+logSourceAttributeIndex+') button[value='+logSourceAttributeName+']').addClass('btn-primary').show();
+			
 			// but not in others
 			headerRow.find('th:not(:nth-child('+logSourceAttributeIndex+')) button[value='+logSourceAttributeName+']').removeClass('btn-primary').hide();
+			
 			// hide all other attributes in this column
 			headerRow.find('th:nth-child('+logSourceAttributeIndex+') button:not([value='+logSourceAttributeName+'])').removeClass('btn-primary').hide();
 		}else{
@@ -316,10 +326,10 @@ function validateLogPreview(logPreview, formElement){
 	inputSuccess(formElement);
 	
 	// Prompt to configure the CSV
-	elementAttachedPopover(formElement.parents('.log-sources').find('.configureLogSource').addClass('btn-primary'), "Success", "Please configure log source");
+	elementAttachedPopover(formElement.parents('.log-sources').find('.config.indicesureLogSource').addClass('btn-primary'), "Success", "Please configure log source");
 	
 	// Add the preview array to the log source row
-	$(formElement).parents('.log-sources').data('logPreview', logPreviewArray);
+	$(formElement).parents('.log-sources').data('logSource').preview =logPreviewArray;
 	
 	// Remove the spinner
 	formElement.parents('label').find('i.icon-spinner').remove();
