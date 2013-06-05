@@ -128,13 +128,13 @@ function readLocalFileSlice(file,  callback, startBytes, data){
 	var reader = new FileReader();
 	
 	// Check our slice doesn't go past the end of the file, just read to the end if it is
-	endBytes = (endBytes < file.size) ? endBytes : file.size;
+	endBytes = (endBytes < file.size) ? endBytes : file.size+1;
 	
 	// Once the slice has finished pass it on to the validation function
 	reader.onloadend = function(evt) {
 	  if (evt.target.readyState == FileReader.DONE) { // DONE == 2
 		
-		
+		// Have we finished?
 		if(endBytes >= file.size){
 		
 			// Send the data to the callback
@@ -142,12 +142,12 @@ function readLocalFileSlice(file,  callback, startBytes, data){
 		}else{
 		
 			// Read the next section
-			readLocalFileSlice(file, callback, endBytes+chunkSliceSize,  data+evt.target.result);
+			readLocalFileSlice(file, callback, endBytes,  data+evt.target.result);
 		}
 	  }
 	};
 	
 	// Fire off the slice
-	var blob = file.slice(startBytes, endBytes + 1);
+	var blob = file.slice(startBytes, endBytes);
 	reader.readAsBinaryString(blob);
 }
