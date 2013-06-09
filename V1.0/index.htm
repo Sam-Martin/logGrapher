@@ -3,6 +3,7 @@
 		<link href="http://netdna.bootstrapcdn.com/font-awesome/3.0.2/css/font-awesome.css" rel="stylesheet" media="screen">
 		<link href="css/bootstrap.min.css" rel="stylesheet" media="screen">
 		<link href="css/style.css" rel="stylesheet" media="screen">
+		<link href="css/logGrapher.css" rel="stylesheet" media="screen">
 		<title>LogGrapher.com</title>
 	 </head>
 	<body>
@@ -49,68 +50,7 @@
 					<p>Here you can specify one or more URLs or files to use as log sources. Valid formats are .CSV and <abbr title="As downloaded from LogGrapher.com">.LOGG </abbr>.</p>
 				</div>
 				
-				<div id="log-sources-settings-modal" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="log-sources-settings-modal-label" aria-hidden="true">
-					<div class="modal-header">
-						<button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
-						<h3 id="log-sources-settings-modal-label">Log Source Settings</h3>
-					</div>
-					<div class="modal-body">
-						<h3>Select Columns</h3>
-						<p>Pick which column corresponds with the label of the line(s) to be graphed, the value to graph on the vertical axis and the timestamp to graph on the horizontal axis</p>
-						<div class="well">
-							<table class="table table-bordered table-condensed">
-								<thead>
-									<tr>
-										<th>#1</th>
-										<th>#2</th>
-									</tr>
-								</thead>
-								<tbody>
-									<tr>
-										<td>01/02/2013</td>
-										<td>Potato</td>
-									</tr>
-								</tbody>
-							</table>
-						</div>
-					</div>
-					<div class="modal-footer">
-						<button class="btn btn-primary" data-dismiss="modal" aria-hidden="true">Done</button>
-					</div>
-				</div>
 				
-				<ol id="log-sources-wrapper">
-					<li class="log-sources" style="display:none;">					
-						<ul>
-							<li>
-								<button class="btn btn-danger" onClick="deleteLogSource(event)"><i class="icon-trash"></i></button>
-								<button class="btn configureLogSource" onClick="configureLogSource(event)"><i class="icon-wrench"></i></button>
-							</li>
-							<li>
-								<div class="btn-group">
-									<button class="btn" onClick="toggleUrlFileInput(event, 'url')">URL</button>
-									<button class="btn btn-inverse" onClick="toggleUrlFileInput(event, 'file')">File</button>
-								</div>
-							</li>
-							
-							<li class="log-sources-source-url control-group">
-								<label class="control-label">URL:
-									<input type="text" name="logURL" onChange="fetchLogSourcePreview(event)"/>
-								</label>
-							</li>
-							<li class="log-sources-source-file control-group">
-								<label class="control-label">
-									<input type="file" name="logFile" onChange="fetchLogSourcePreview(event)"/>
-								</label>
-							</li>
-							
-						</ul>
-					</li>
-				</ol>
-				<button id="log-sources-add-button" class="btn" onClick="addLogSource()"><i class="icon-plus"></i> Add Source</button>
-				<button class="btn btn-warning" id="log-sources-delete-source-button" style="display:none;">Undo</button>
-				<button class="btn-primary btn-large pull-right"><i class="icon-ok"></i> Graph</button>
-				<div class="clearfix"></div>
 			</div>
 			
 		</main>
@@ -127,6 +67,7 @@
 		
 		<!-- Custom JS -->
 		<script src="js/main.js"></script>
+		<script src="js/logGrapher.js"></script>
 		<script src="js/data.js"></script>
 	</body>
 </html>

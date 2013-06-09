@@ -1,0 +1,707 @@
+
+/*********************************
+	LogGrapher Constructor
+*********************************/
+
+function logGrapher(parentWrapper){
+	
+	// For the purposes of anonmyous and child functions, tie the parent obj to the var logGrapherObj
+	var logGrapherObj = this;
+	
+	this.parentWrapper = $(parentWrapper);
+	
+	// Define the log sources array
+	this.logSources = [];
+	
+	// Initialise the parentElement
+	this.parentWrapper.append(
+		'<div class="log-sources-settings-modal modal hide fade" tabindex="-1" role="dialog" aria-labelledby="log-sources-settings-modal-label" aria-hidden="true">'+
+		'	<div class="modal-header">'+
+		'		<button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>'+
+		'		<h3 class="log-sources-settings-modal-label">Log Source Settings</h3>'+
+		'	</div>'+
+		'	<div class="modal-body">'+
+		'		<h3>Select Columns</h3>'+
+		'		<p>Pick which column corresponds with the label of the line(s) to be graphed, the value to graph on the vertical axis and the timestamp to graph on the horizontal axis</p>'+
+		'		<div class="well">'+
+		'			<table class="table table-bordered table-condensed">'+
+		'				<thead>'+
+		'					<tr>'+
+		'						<th>#1</th>'+
+		'						<th>#2</th>'+
+		'					</tr>'+
+		'				</thead>'+
+		'				<tbody>'+
+		'					<tr>'+
+		'						<td>01/02/2013</td>'+
+		'						<td>Potato</td>'+
+		'					</tr>'+
+		'				</tbody>'+
+		'			</table>'+
+		'		</div>'+
+		'	</div>'+
+		'	<div class="modal-footer">'+
+		'		<button class="btn btn-primary" data-dismiss="modal" aria-hidden="true">Done</button>'+
+		'	</div>'+
+		'</div>'+
+		'<ol class="log-sources-wrapper"></ol>'+
+		'<button class="log-sources-add-button btn" name="logSourceAdd"><i class="icon-plus"></i> Add Source</button>'+
+		'<button class="btn btn-warning" class="log-sources-delete-source-button" style="display:none;">Undo</button>'+
+		'<button class="btn-primary btn-large pull-right" name="renderGraphButton"><i class="icon-ok"></i> Graph</button>'+
+		'<div class="clearfix"></div>');
+	
+	// Assign the various important elements to variables
+	this.logSourcesWrapper = this.parentWrapper.find('.log-sources-wrapper');
+	this.logSourcesSettingsModal = this.parentWrapper.find('.log-sources-settings-modal');
+	
+	/*
+		Tie event triggers to GUI elements
+	*/
+	$('button[name=logSourceAdd]', this.parentWrapper).click(function(ev){
+		logGrapherObj.addLogSource();
+	});
+	
+	$('button[name=renderGraphButton]',this.parentWrapper).click(function(ev){
+		logGrapherObj.processLogSources();
+	});
+	
+	// Append a new Log Source element to the parent wrapper
+	this.addLogSource();
+}
+
+/*********************************
+	LogGrapher GUI Functions
+*********************************/
+
+// Add log source function
+logGrapher.prototype.addLogSource = function(){
+	
+	
+	// Clone us a new log source object
+	var newLogSource = new logGrapherLogSource();
+	
+	// Populate it with a reference the current logGrapher object
+	newLogSource.logGrapherObj = this;
+	
+	// Add it to the array in the parent object
+	this.logSources.push(newLogSource);
+	
+	// Add element into DOM
+	newLogSource.element.appendTo(this.logSourcesWrapper) 
+		.slideDown(); // Show it
+		
+	/*
+		Tie event triggers to buttons
+	*/
+	
+	// Change  in logURL or logFile
+	$('input[name=logURL], input[name=logFile]',newLogSource.element).bind("change",function(ev){
+		newLogSource.fetchLogSourcePreview(ev);
+	});
+	
+	// Click to toggle URL or file selection
+	$('button[name=logURLButton], button[name=logFileButton]', newLogSource.element).click(function(ev){
+		newLogSource.toggleUrlFileInput(ev);
+	});
+	
+	// Delete log source button
+	$('button[name=logSourceDeleteButton]',newLogSource.element).click(function(ev){
+		newLogSource.deleteLogSource(ev);
+	});
+	
+	// Configure log source button
+	$('button[name=logSourceConfigureButton]',newLogSource.element).click(function(ev){
+		newLogSource.configureLogSource(ev);
+	});
+}
+
+// Delete log source
+logGrapher.prototype.deleteLogSource = function(ev){
+	
+	var undoTimer = 5000; // Five seconds to undo the deletion!
+	var undoButton;
+	
+	// Find any other log sources with pending deletions and finish them off 
+	$('#log-sources-wrapper [data-pending-deletion=true]').remove();
+	
+	
+	// Slide up and detach the log source in question
+	var lastDeletedLogSource = $(ev.srcElement).parents('.log-sources');
+	lastDeletedLogSource.data('pendingDeletion', true).slideUp(function(){$(this).detach();});
+	
+	// Unbind any previous clicks
+	undoButton = $('#log-sources-delete-source-button').fadeIn().unbind("click");
+	
+	// Stop the undo button being hidden prematurely
+	clearInterval(undoButton.data('timer'));
+	
+	
+	// Bind undo action to undo button
+	undoButton.click(function(){
+		
+		// Cancel any currently running animations
+		lastDeletedLogSource.stop()
+			.data('pendingDeletion', false); // Cancel the pending deletion;
+		
+		// If there it's not yet detached, just show it
+		if(lastDeletedLogSource.parents('html').length > 0 ){
+			
+			// Unhide that log source
+			lastDeleted.slideDown(); 
+		}else{
+			
+			// Otherwise, add it back in
+			lastDeletedLogSource.appendTo('#log-sources-wrapper');
+			lastDeletedLogSource.hide().slideDown();
+		}
+		
+		// Hide the undo button
+		undoButton.fadeOut();
+		
+	});
+	
+	// After the specified amount of time, if the deletion hasn't been cancelled, remove it permanently
+	undoButton.data('timer', setTimeout(function(){
+			
+			if(lastDeletedLogSource.data('pendingDeletion')){
+				lastDeletedLogSource.remove();
+				// Remove the undo button
+				undoButton.fadeOut();
+			}
+		}, undoTimer)
+	);
+	
+}
+
+
+
+// Starting function once all logs have been assigned configuration values and are ready for processing
+logGrapher.prototype.processLogSources = function(){
+	
+	console.log(this); //debug
+	// Loop through the log sources and process them one by one (not the first one though, that's a template)
+	$.each(this.logSources, function(index, logSourceObj){
+		
+		logSourceRow = logSourceObj.element;
+		
+		// Determine whether it's a local file or a url
+		if(logSourceObj.config.currentSource == "file"){
+			
+			console.log("Fetching file"); //debug
+			
+			logSourceObj.fetchLogFromFile(logSourceRow, function(data){
+			
+				console.log(data); //debug
+			});
+			
+		}else if(logSourceObj.config.currentSource == "url"){
+			
+		}
+	});
+}
+
+
+
+/***************************************************
+	Log Grapher Source class
+****************************************************/
+
+logGrapherLogSource = function(){
+	
+	// Define the current log source for anonymous and asynchronous functions
+	var curLogSource = this;
+	
+	this.config = {
+		indices: {
+			timestampIndex: -1,
+			valueIndex: -1,
+			labelIndex: -1
+		},
+		currentSource: "file",
+		logPreview: null,
+		fileName: null,
+		logGrapherObj: null
+	};
+	
+	this.element = $('<li class="log-sources" style="display:none;">'+
+		'	<ul>'+
+		'		<li>'+
+		'			<button class="btn btn-danger" name="logSourceDeleteButton"><i class="icon-trash"></i></button>'+
+		'			<button class="btn configureLogSource" name="logSourceConfigureButton"><i class="icon-wrench"></i></button>'+
+		'		</li>'+
+		'		<li>'+
+		'			<div class="btn-group">'+
+		'				<button class="btn" name="logURLButton">URL</button>'+
+		'				<button class="btn btn-inverse" name="logFileButton">File</button>'+
+		'			</div>'+
+		'		</li>'+
+		'		<li class="log-sources-source-url control-group">'+
+		'			<label class="control-label">URL:'+
+		'				<input type="text" name="logURL"/>'+
+		'			</label>'+
+		'		</li>'+
+		'		<li class="log-sources-source-file control-group">'+
+		'			<label class="control-label">'+
+		'				<input type="file" name="logFile"/>'+
+		'			</label>'+
+		'		</li>'+
+		'		<li class="log-sources-progress-bar-wrapper">'+
+		'			<span class="log-sources-progress-bar-label"></span>'+
+		'			<div class="progress progress-striped active">'+
+		'				<div class="bar" style="width:50%"></div>'+
+		'			</div>'+
+		'		</li>'+
+		'	</ul>'+
+		'</li>');
+	
+	
+	/*******
+		Function to present modal box that allows user to configure the log source options
+	*********/
+	
+	this.configureLogSource = function(ev){
+		
+		// Get log preview table
+		var logPreviewTable = $('table', this.logGrapherObj.logSourcesSettingsModal);
+		
+		// Get logSourceRow
+		var logSourceRow = this.element;
+		
+		// Check we have log preview data
+		if(!(logPreview = this.config.logPreview)){
+			
+			// Show error
+			elementAttachedPopover(ev.currentTarget, "Error", "Please select a valid log source");
+			
+			// Cancel the wedding!
+			return;
+		}
+		
+		// Populate the table from the log source
+		var logPreviewTableBody = '';
+		
+		// Figure out how many columns in the longest row for formatting purposes
+		var longestRow = 0;
+		for(var i = 0; i < logPreview.length;i++){
+			longestRow =  (logPreview[i].length > longestRow) ?  logPreview[i].length : longestRow;
+		}
+		
+		// Table Body
+		// Loop through each row up to a max of 10 (unless we get to the last in the preview, as it's probably incomplete)
+		for(var i = 0; i < logPreview.length-1 && i<=10;i++){
+			
+			logPreviewTableBody += "<tr>\r\n\t<td><strong>"+i+"</strong></td>\r\n\t";
+			
+			// Loop through each column
+			for(var x=0; x < logPreview[i].length; x++){
+				
+				logPreviewTableBody+= "\t<td";
+				
+				// If this row is has fewer columns than the longest, span the last column to make up the difference
+				logPreviewTableBody+= (logPreview[i].length < longestRow && x == logPreview[i].length-1) ? ' colspan="'+(longestRow-logPreview[i].length +1 )+'">' : '>';
+				
+				logPreviewTableBody +=logPreview[i][x]+"</td>\r\n";
+			}
+			
+			logPreviewTableBody+='</tr>\r\n';
+			
+		}
+		
+		// Add a row indicating that this is a preview
+		logPreviewTableBody+='<tr class="warning">\r\n\t<td colspan="'+(longestRow+1)+'">Preview Only...</td>\r\n</tr>';
+		
+		// Input the table body
+		logPreviewTable.find('tbody').html(logPreviewTableBody);
+		
+		// Table Header
+		// Loop through the longest row and generate the header
+		logPreviewTableHeader = '<tr>\r\n\t<th>&nbsp;</th>\r\n';
+		for(var i=0; i<=longestRow-1;i++){
+			
+			logPreviewTableHeader += "\t<th>"+String.fromCharCode(i+65)+"<br/>\r\n";
+			// Add the selection buttons
+			logPreviewTableHeader += '<div class="btn-group btn-group-vertical selectLogSourcePropertyButtonGroup" style="min-width:100px;width:100%">\r\n\t'+
+				'<button class="btn btn-block" value="timestampIndex">Timestamp</button>\r\n\t'+
+				'<button class="btn btn-block" value="valueIndex" >Value</button>\r\n\t'+
+				'<button class="btn btn-block" value="labelIndex">Label</button>\r\n</div>\r\n'+
+				'</th>\r\n';
+		}
+		
+		logPreviewTableHeader+='</tr>';
+		
+		// Input the table Header
+		$('thead',logPreviewTable).html(logPreviewTableHeader);	
+		
+		// Show Modal
+		this.logGrapherObj.logSourcesSettingsModal.modal('show');
+		
+		// Tie the modal to the current log source
+		this.logGrapherObj = currentlyActiveLogSource = this;
+
+		// Show/hide buttons as appropriate
+		this.displayLogSourceConfigButtons(logSourceRow, logPreviewTable.find('thead'));
+		
+		// Bind buttons to allow selection of a log source's properties (e.g. timestamp, value, label)
+		$('.selectLogSourcePropertyButtonGroup > button', logPreviewTable).bind("click", function(ev){
+			
+			curLogSource.selectLogSourceProperty(ev);
+		});
+	}
+	
+	/***************
+		Function to fetch a preview of the log source
+	***************/
+	
+	this.fetchLogSourcePreview = function(ev){
+	
+		var formElement = $(ev.currentTarget);
+		var logSourceRow = this.element;
+		
+		// Add a spinner
+		formElement.parents('label').prepend('<i class="icon-spinner icon-spin pull-right"></i> ');
+
+		if(formElement.is(':file')){
+			
+			// Fetch preview from local file
+			this.fetchLocalLogPreview(formElement, this.validateLogPreview);
+			
+			// Update the file name
+			this.config.fileName = formElement.get(0).files[0].name;
+			
+		}else{
+
+			// Send off the partial HTTP request
+			fetchURLLogPreview(formElement, this.validateLogPreview);
+			
+			// Update the file name
+			this.config.fileName = formElement.val().match("\/[^\/]*$");
+		}
+	}
+	
+	
+	/**************
+		Function that checks to see if the file the user has given us is a valid CSV
+	***************/
+	
+	this.validateLogPreview = function(logPreview, formElement){
+
+		// Handle a failure to return valid data
+		if(!logPreview){
+			inputError(formElement, "Could not access file");
+			return;
+		}
+		
+		// Okay, we have some data, but is it valid?
+		// Try parsing the data as a CSV
+		try{
+		
+			var logPreviewArray = jQuery.csv.toArrays(logPreview);
+		
+		}catch(err){
+		
+			// Show the error
+			inputError(formElement, "Failed to parse file");
+			
+			// Remove the spinner
+			formElement.parents('label').find('i.icon-spinner').remove();
+			return false;
+		}
+
+		// Show the success
+		inputSuccess(formElement);
+		
+		
+		
+		// Prompt to configure the CSV
+		elementAttachedPopover($('.config.indicesureLogSource', this.element).addClass('btn-primary'), "Success", "Please configure log source"); //TODO
+		
+		
+		
+		// Add the preview array to the log source row
+		curLogSource.config.logPreview = logPreviewArray;
+		
+		// Remove the spinner
+		formElement.parents('label').find('i.icon-spinner').remove();
+		
+	}
+	
+	
+	/*********
+		Function to fetch a preview from a local file
+	***********/
+	
+	this.fetchLocalLogPreview = function(formElement, callback){
+		// Fetch preview from local file
+			
+		var startBytes = 0;
+		var endBytes = 500;
+		var files = formElement.get(0).files;
+		var reader = new FileReader();
+		
+		// Check there are files selected
+		if(files.length == 0){
+			return;
+		}
+		
+		// Get the first (hopefully only!) file
+		var file = files[0];
+		
+		// Check our preview isn't longer than the actual file and just read to the end if it is
+		endBytes = (endBytes < file.size) ? endBytes : file.size;
+
+		// Once the slice has finished pass it on to the validation function
+		reader.onloadend = function(evt) {
+		  if (evt.target.readyState == FileReader.DONE) { // DONE == 2
+			
+			// Send the data to the callback
+			callback(evt.target.result, formElement);
+		  }
+		};
+		
+		// Fire off the slice
+		var blob = file.slice(startBytes, endBytes + 1);
+		reader.readAsBinaryString(blob);
+	}
+	
+	/********
+		Function to fetch a preview of a log file from a URL
+	**********/
+
+	this.fetchURLLogPreview = function(formElement, callback){
+		
+		// Fetch a preview from a remote URL
+		var fileURL = formElement.val();
+		$.ajax(fileURL, {
+			
+			// Listen in on progress
+			xhr: function(){
+				var xhr = new window.XMLHttpRequest();
+
+				
+				// Check to see how many lines we have
+				xhr.addEventListener("progress", function(evt){
+					
+					try{
+						var numLines = (evt.currentTarget.response).match(/[\r\n]/g).length;
+					}catch(e){return;}
+					
+					if(numLines > 1){
+					
+						// Okay, we've got a couple of lines of data, send it back to the callback for processing
+						callback(evt.currentTarget.response, formElement);
+					}
+					
+					// Cancel the download, we don't need the whole thing, just the first few lines to show the user.
+					xhr.abort();
+					
+				}, false);
+				return xhr;
+			}, 
+			error: function(){
+				callback(false);
+				
+			}
+		})
+
+		
+	}
+	
+
+	/*******************
+		Function to handle assignment of log source property (e.g. the user has selected a column as timestamp)
+	********************/
+	this.selectLogSourceProperty = function(ev){
+		
+		
+		var formElement = $(ev.currentTarget);
+		var logSourceRow = this.element;
+		var headerRow = formElement.parents('tr');
+		var logSourceAttribute = formElement.val();
+				
+		// Figure out which column this is
+		var columnIndex = formElement.parents('tr').find('th').index(formElement.parents('th'));
+		
+		// If this column is the currently selected column for this attribute, unselect it
+		if(this.config.indices[logSourceAttribute] == columnIndex){
+			
+			// Remove the selected index as the selected attribute (e.g. column 0 = timestamp)
+			this.config.indices[logSourceAttribute] = -1;
+			
+		}else{
+			
+			// Otherwise, select it as the column for this attribute
+			
+			// Save the selected index as the selected attribute (e.g. column 0 = timestamp)
+			this.config.indices[logSourceAttribute] = columnIndex;
+			
+		}
+		
+		// Show/hide buttons as appropriate
+		this.displayLogSourceConfigButtons(headerRow);
+	}
+	
+	/***************
+		Function to display buttons to facilitate the configuration of log source
+	***************/
+	
+	this.displayLogSourceConfigButtons = function(headerRow){
+		
+		// Reset button-primary
+		headerRow.find('button.btn-primary').removeClass('btn-primary');
+		
+		// Reset button visibility
+		headerRow.find('button').show();
+		
+		// Show/hide attribute selection buttons as appropriate
+		$.each(this.config.indices, function(logSourceAttributeName, logSourceAttributeIndex){
+			
+			if(logSourceAttributeIndex != -1){
+				
+				// Increment the index by 1 so that it compensates for the blank <th> that is a spacer for the row ID
+				logSourceAttributeIndex++;
+				
+				// logSourceAttributeIndex is set, show the attribute in this column...
+				headerRow.find('th:nth-child('+logSourceAttributeIndex+') button[value='+logSourceAttributeName+']').addClass('btn-primary').show();
+				
+				// but not in others
+				headerRow.find('th:not(:nth-child('+logSourceAttributeIndex+')) button[value='+logSourceAttributeName+']').removeClass('btn-primary').hide();
+				
+				// hide all other attributes in this column
+				headerRow.find('th:nth-child('+logSourceAttributeIndex+') button:not([value='+logSourceAttributeName+'])').removeClass('btn-primary').hide();
+			}else{
+				
+				// logSourceAttributeIndex show all buttons (except in cells with btn-primary (i.e. an attribute already assigned to this column))
+				headerRow.find('th:not(:nth-child('+logSourceAttributeIndex+')):not(:has(button.btn-primary)) button[value='+logSourceAttributeName+']').show();
+			}
+		});
+	}
+
+	
+	/********
+		Function to fetch an entire log from a file
+	**********/
+	
+	this.fetchLogFromFile = function(logSourceRow, callback){
+		var files = $('input[name=logFile]',logSourceRow).get(0).files;
+			
+		// Check there are files selected
+		if(files.length == 0){
+			console.log("No file selected"); //debug todo
+			return;
+		}
+		
+		
+		// Build the string from the file in pieces, to prevent hanging
+		this.readLocalFileSlice(files[0], function(data){
+			
+			console.log(data); //debug
+			
+			
+		});
+			
+		
+		
+	}
+	
+	/*******
+		Function to fetch part of a local file
+	*******/
+	
+	this.readLocalFileSlice = function(file,  callback, startBytes, data){
+		
+		console.log(startBytes); // TODO: Progress bar
+		
+		var chunkSliceSize = 2000;
+		var startBytes = typeof(startBytes) == "undefined" ? 0 : startBytes;
+		var endBytes = startBytes+chunkSliceSize;
+		var reader = new FileReader();
+		
+		// Check our slice doesn't go past the end of the file, just read to the end if it is
+		endBytes = (endBytes < file.size) ? endBytes : file.size+1;
+		
+		// Once the slice has finished pass it on to the validation function
+		reader.onloadend = function(evt) {
+		  if (evt.target.readyState == FileReader.DONE) { // DONE == 2
+			
+			// Have we finished?
+			if(endBytes >= file.size){
+			
+				// Send the data to the callback
+				callback(data+evt.target.result);
+			}else{
+			
+				// Read the next section
+				curLogSource.readLocalFileSlice(file, callback, endBytes,  data+evt.target.result);
+			}
+		  }
+		};
+		
+		// Fire off the slice
+		var blob = file.slice(startBytes, endBytes);
+		reader.readAsBinaryString(blob);
+	}
+
+	
+}	
+
+function elementAttachedPopover(element, title, message){
+	
+	// Set popover options
+	$(element).popover({
+		placement: "top",
+		animation: "fade",
+		title: title,
+		content: message
+	}).popover("show"); // Show popover
+	
+	// Hide after 5 seconds
+	setTimeout(function(){
+		$(element).popover("destroy");
+	}, 5000);
+}
+
+// Display an error on a form element
+function inputError(formElement, errMessage){
+	
+	// Add error class to form element's control group
+	$(formElement).parents('.control-group').removeClass('success').addClass("error");
+	
+	// Set popover options
+	$(formElement).popover({
+		placement: "top",
+		animation: "fade",
+		title: "Error",
+		content: errMessage
+	}).popover("show"); // Show tooltip
+	
+	// Hide after 5 seconds
+	setTimeout(function(){
+		$(formElement).popover("destroy");
+	}, 5000);
+		
+}
+
+// Indicate success in filling out a form element
+
+function inputSuccess(formElement, successMessage){
+
+	// Add success class to form element's control group
+	$(formElement).parents('.control-group').removeClass('error').addClass('success');
+	
+	// If there is one, show the succes message
+	if(successMessage){
+		
+		// Set popover options
+		$(formElement).popover({
+			placement: "top",
+			animation: "fade",
+			title: "Success",
+			content: successMessage
+		}).popover("show"); // Show popover
+		
+		// Hide after 5 seconds
+		setTimeout(function(){
+			$(formElement).popover("destroy");
+		}, 5000);
+	}
+}
