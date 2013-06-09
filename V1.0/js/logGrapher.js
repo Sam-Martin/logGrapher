@@ -578,6 +578,20 @@ logGrapherLogSource = function(){
 
 	
 	/********
+		Function to display progress of log processing
+	**********/
+	
+	this.showProgress = function(percentage, message){
+		
+		// Display message
+		$('.log-sources-progress-bar-label',this.element).text(message);
+		
+		// Display percent
+		$('.log-sources-progress-bar-wrapper > .progress > .bar', this.element).css('width', percentage);
+	}
+		
+	
+	/********
 		Function to fetch an entire log from a file
 	**********/
 	
@@ -609,15 +623,22 @@ logGrapherLogSource = function(){
 	
 	this.readLocalFileSlice = function(file,  callback, startBytes, data){
 		
-		console.log(startBytes); // TODO: Progress bar
-		
-		var chunkSliceSize = 2000;
+				
+		var chunkSliceSize = 20000;
 		var startBytes = typeof(startBytes) == "undefined" ? 0 : startBytes;
 		var endBytes = startBytes+chunkSliceSize;
 		var reader = new FileReader();
 		
 		// Check our slice doesn't go past the end of the file, just read to the end if it is
 		endBytes = (endBytes < file.size) ? endBytes : file.size+1;
+		
+		// Show progress
+		var percentage = Math.round((endBytes/file.size)*10000)/100 // The odd division and multiplication allows us to get two decimal places
+		this.showProgress(
+			percentage, 
+			percentage + "% uploaded file"
+		);
+		
 		
 		// Once the slice has finished pass it on to the validation function
 		reader.onloadend = function(evt) {
