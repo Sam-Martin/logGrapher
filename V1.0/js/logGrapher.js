@@ -178,21 +178,22 @@ logGrapher.prototype.deleteLogSource = function(ev){
 // Starting function once all logs have been assigned configuration values and are ready for processing
 logGrapher.prototype.processLogSources = function(){
 	
-	console.log(this); //debug
+
+	// Hide log source config items
+	$('ul li', this.element).hide();
+
+	// Show progress elements
+	$('.log-sources-progress-bar-wrapper, .log-sources-progress-bar-label', this.element).css('display', 'inline-block');
+	
 	// Loop through the log sources and process them one by one (not the first one though, that's a template)
 	$.each(this.logSources, function(index, logSourceObj){
 		
-		logSourceRow = logSourceObj.element;
 		
 		// Determine whether it's a local file or a url
 		if(logSourceObj.config.currentSource == "file"){
 			
-			console.log("Fetching file"); //debug
-			
-			logSourceObj.fetchLogFromFile(logSourceRow, function(data){
-			
-				console.log(data); //debug
-			});
+			// Get the contents of the file, piece by piece, and then pass the data to processLogContent()
+			logSourceObj.fetchLogFromFile(logSourceObj.element, logSourceObj.processLogContent);
 			
 		}else if(logSourceObj.config.currentSource == "url"){
 			
@@ -210,6 +211,9 @@ logGrapherLogSource = function(){
 	
 	// Define the current log source for anonymous and asynchronous functions
 	var curLogSource = this;
+
+	// Define CSV Web Worker
+	this.csvWorker = new Worker('js/csvParserWorker.js');
 	
 	this.config = {
 		indices: {
@@ -218,6 +222,7 @@ logGrapherLogSource = function(){
 			labelIndex: -1
 		},
 		currentSource: "file",
+		currentSourceType: "csv",
 		logPreview: null,
 		fileName: null,
 		logGrapherObj: null
@@ -246,11 +251,11 @@ logGrapherLogSource = function(){
 		'			</label>'+
 		'		</li>'+
 		'		<li class="log-sources-progress-bar-wrapper">'+
-		'			<span class="log-sources-progress-bar-label"></span>'+
 		'			<div class="progress progress-striped active">'+
 		'				<div class="bar" style="width:50%"></div>'+
 		'			</div>'+
 		'		</li>'+
+		'		<li class="log-sources-progress-bar-label"></li>'+
 		'	</ul>'+
 		'</li>');
 	
@@ -582,7 +587,7 @@ logGrapherLogSource = function(){
 	**********/
 	
 	this.showProgress = function(percentage, message){
-		
+
 		// Display message
 		$('.log-sources-progress-bar-label',this.element).text(message);
 		
@@ -606,12 +611,7 @@ logGrapherLogSource = function(){
 		
 		
 		// Build the string from the file in pieces, to prevent hanging
-		this.readLocalFileSlice(files[0], function(data){
-			
-			console.log(data); //debug
-			
-			
-		});
+		this.readLocalFileSlice(files[0], callback);
 			
 		
 		
@@ -624,7 +624,7 @@ logGrapherLogSource = function(){
 	this.readLocalFileSlice = function(file,  callback, startBytes, data){
 		
 				
-		var chunkSliceSize = 20000;
+		var chunkSliceSize = 200000;
 		var startBytes = typeof(startBytes) == "undefined" ? 0 : startBytes;
 		var endBytes = startBytes+chunkSliceSize;
 		var reader = new FileReader();
@@ -662,7 +662,85 @@ logGrapherLogSource = function(){
 		reader.readAsBinaryString(blob);
 	}
 
-	
+	/*********
+		Function to process a log file's raw data
+	*************/
+	this.processLogContent = function(data){
+		
+		console.log(curLogSource); //debug
+		if(curLogSource.config.currentSourceType == "csv"){
+
+
+			// Split the CSV into lines
+			var splitCSV = data.split('\n');
+
+			console.log(splitCSV.length); //debug
+
+			// Initialise a temporary array to dump the parsed CSV rows and column into
+			curLogSource.tempCSVArray = [];
+			
+			// Set off the loop to process a maximum of 100,000 rows at a time
+			curLogSource.parseCSVLoop(splitCSV, 0);
+		}
+	}
+
+	/************
+		Function to loop through the CSV line by line and pass it to the webworker
+	**************/
+	this.parseCSVLoop = function(splitCSV, curIndex, result){
+
+		// Calculate the percentage we've completed so far
+		var percentComplete = (curIndex / splitCSV.length) * 100;
+
+		// Round to two decimal places
+		percentComplete = Math.round(percentComplete*100)/100;
+		
+		// Update the user on our progress
+		this.showProgress(
+			percentComplete, 
+			percentComplete + "% parsed CSV data"
+		);
+		
+		// If this is returning from a worker, add the result to the tempCSVArray
+		if(typeof(result) != "undefined"){
+			
+			curLogSource.tempCSVArray = curLogSource.tempCSVArray.concat(result);
+			
+		}
+		
+		// If we have yet to finish, keep processing!
+		if(curIndex != splitCSV.length){
+			
+			// Process the CSV 10000 rows at a time
+			var maxNumRows = 10000;
+			
+			// Calculate the number of rows to deal with now (make sure we don't try to process lines that don't exist!)
+			var numRowsToProcess = (curIndex+maxNumRows > splitCSV.length) ? splitCSV.length - curIndex : maxNumRows;
+			var nextIndex = curIndex + numRowsToProcess;
+			
+			var rowsToProcess = splitCSV.slice(curIndex, curIndex+numRowsToProcess);
+			
+			rowsToProcess= rowsToProcess.join("\n");
+			
+			/*console.log("\n\n"+rowsToProcess);//debug
+			
+			console.log("numRowsToProcess:"+numRowsToProcess);
+			console.log("nextIndex:"+nextIndex); */
+			
+			// Parse CSV data using a worker
+			curLogSource.csvWorker.postMessage(rowsToProcess);
+			
+			
+			// Wait for the worker to return
+			curLogSource.csvWorker.onmessage = function (event) {
+				
+			curLogSource.parseCSVLoop(splitCSV, nextIndex, event.data);
+			}
+		}else{
+
+			console.log("output csv array length:"+tempCSVArray.length); //debug
+		}
+	}
 }	
 
 function elementAttachedPopover(element, title, message){
