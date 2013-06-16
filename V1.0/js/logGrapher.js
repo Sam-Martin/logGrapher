@@ -213,7 +213,7 @@ logGrapherLogSource = function(){
 	var curLogSource = this;
 
 	// Define CSV Web Worker
-	this.csvWorker = new Worker('js/csvParserWorker.js');
+	this.webWorker = new Worker('js/logGrapherWebWorker.js');
 	
 	this.config = {
 		indices: {
@@ -667,14 +667,13 @@ logGrapherLogSource = function(){
 	*************/
 	this.processLogContent = function(data){
 		
-		console.log(curLogSource); //debug
 		if(curLogSource.config.currentSourceType == "csv"){
 
 
 			// Split the CSV into lines
 			var splitCSV = data.split('\n');
 
-			console.log(splitCSV.length); //debug
+			log(splitCSV.length); //debug
 
 			// Initialise a temporary array to dump the parsed CSV rows and column into
 			curLogSource.tempCSVArray = [];
@@ -687,10 +686,10 @@ logGrapherLogSource = function(){
 	/************
 		Function to loop through the CSV line by line and pass it to the webworker
 	**************/
-	this.parseCSVLoop = function(splitCSV, curIndex, result){
+	this.parseCSVLoop = function(splitCSVString, curIndex, result){
 
 		// Calculate the percentage we've completed so far
-		var percentComplete = (curIndex / splitCSV.length) * 100;
+		var percentComplete = (curIndex / splitCSVString.length) * 100;
 
 		// Round to two decimal places
 		percentComplete = Math.round(percentComplete*100)/100;
@@ -705,42 +704,160 @@ logGrapherLogSource = function(){
 		if(typeof(result) != "undefined"){
 			
 			curLogSource.tempCSVArray = curLogSource.tempCSVArray.concat(result);
-			
+
+		}else{
+			log("parse CSV called with undefined result, expected only in first call", "verbose");
 		}
 		
 		// If we have yet to finish, keep processing!
-		if(curIndex != splitCSV.length){
+		if(curIndex != splitCSVString.length){
 			
 			// Process the CSV 10000 rows at a time
 			var maxNumRows = 10000;
 			
 			// Calculate the number of rows to deal with now (make sure we don't try to process lines that don't exist!)
-			var numRowsToProcess = (curIndex+maxNumRows > splitCSV.length) ? splitCSV.length - curIndex : maxNumRows;
+			var numRowsToProcess = (curIndex+maxNumRows > splitCSVString.length) ? splitCSVString.length - curIndex : maxNumRows;
 			var nextIndex = curIndex + numRowsToProcess;
 			
-			var rowsToProcess = splitCSV.slice(curIndex, curIndex+numRowsToProcess);
+			var rowsToProcess = splitCSVString.slice(curIndex, curIndex+numRowsToProcess);
 			
 			rowsToProcess= rowsToProcess.join("\n");
 			
-			/*console.log("\n\n"+rowsToProcess);//debug
-			
-			console.log("numRowsToProcess:"+numRowsToProcess);
-			console.log("nextIndex:"+nextIndex); */
+			log("next CSV row index:"+nextIndex, "verbose");
 			
 			// Parse CSV data using a worker
-			curLogSource.csvWorker.postMessage(rowsToProcess);
+			curLogSource.webWorker.postMessage(JSON.stringify({
+				function: "parseCSV",
+				value: rowsToProcess,
+				nextIndex: nextIndex
+			}));
 			
 			
 			// Wait for the worker to return
-			curLogSource.csvWorker.onmessage = function (event) {
+		
+			curLogSource.webWorker.onmessage = function (event) {
 				
-			curLogSource.parseCSVLoop(splitCSV, nextIndex, event.data);
+				var webWorkerResult = JSON.parse(event.data);
+				log("CSV parse web worker returned", "verbose");
+				curLogSource.parseCSVLoop(splitCSVString, webWorkerResult.nextIndex,webWorkerResult.value);
 			}
+		
 		}else{
 
-			console.log("output csv array length:"+tempCSVArray.length); //debug
+		
+
+			// We've completed the CSV Parsing!
+			// Let's turn that CSV array into an object that contains the various different 'labels' as indices
+			curLogSource.seriesObj = curLogSource.createSeriesObjFromCSVArray(curLogSource.tempCSVArray);
+
+			// Clean up the old CSV array
+			delete curLogSource.tempCSVArray;
+
+		
+			// Now turn that object into a graph (temporarily here anyway, this is not the final location for log graphing)
+			
+			$('#jqChart').jqChart({
+				title: {
+					text: ' Test.',
+					font: '18px sans-serif'
+				},
+				axes: [{
+					type: 'dateTime',
+					location: 'bottom',
+					zoomEnabled: true
+				}],
+				border: {
+					strokeStyle: '#6ba851'
+				},
+				tooltips: {
+					type: 'shared'
+				},
+				crosshairs: {
+					enabled: true,
+					hLine: false,
+					vLine: {
+						strokeStyle: '#cc0a0c'
+					}
+				},
+				series: curLogSource.seriesObj
+			});  
+
 		}
+		// Clean up
+		delete splitCSVString;
+		delete rowsToProcess;
 	}
+
+	// Function to rows of individual entries into index oriented object
+	this.createSeriesObjFromCSVArray = function(csvRows){
+		
+
+		var seriesByNameObj = {};
+		var seriesByNameArray =[];
+		var numSeries = 0;
+
+
+		// Suitable only for test data
+		var settings = {
+			timestampIndex: 2,
+			valueIndex: 0,
+			labelIndex: 3
+		}
+		
+		// Loop through the rows and aggregate the series (defined by 'labels') into objects
+		for(key in csvRows){
+		
+						
+			var row = csvRows[key];
+			var val = row[settings.valueIndex];
+			var timestamp = row[settings.timestampIndex];
+			var seriesName = row[settings.labelIndex];
+
+
+			if (parseInt(val) >= 0 && seriesName.length > 0) {
+
+				// Check to see if the series has been added to the obj
+				if (typeof (seriesByNameObj[seriesName]) == 'undefined') {
+					
+					// It hasn't, add it
+					seriesByNameObj[seriesName] = [];
+					numSeries++;
+				}
+
+				// Format Unix Timestamp
+				var timestampUnix
+				
+				timestampUnix = Date.UTC(timestamp.substr(6, 4), timestamp.substr(3, 2) - 1, timestamp.substr(0, 2), timestamp.substr(11, 2), timestamp.substr(14, 2), timestamp.substr(17, 2));
+
+				
+
+				seriesByNameObj[seriesName].push([
+					new Date(timestampUnix), 
+					parseInt(val)
+				]);
+
+			}
+		}
+
+		// Now loop through each series and add it into an array so it's jqCharts compatible
+		$.each(seriesByNameObj, function(index, dataPoints){
+
+			seriesByNameArray.push({
+				type: "line",
+				data: dataPoints,
+				markers: null
+			});
+
+		});
+
+		delete csvRows;
+		delete seriesByNameObj;
+		
+		log("Found "+numSeries+" series in csv array"); 
+		return seriesByNameArray;
+	}
+
+
 }	
 
 function elementAttachedPopover(element, title, message){
@@ -803,4 +920,8 @@ function inputSuccess(formElement, successMessage){
 			$(formElement).popover("destroy");
 		}, 5000);
 	}
+}
+
+var log = function(string){
+	console.log(string);
 }

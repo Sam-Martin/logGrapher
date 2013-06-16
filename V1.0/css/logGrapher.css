@@ -75,3 +75,12 @@ li.log-sources-source-url, li.log-sources-progress-bar-wrapper {
 	left:25%;
 	margin-left:0;
 }
+
+/* Disable progress bar animation to speed up the update */
+.progress .bar {
+    -webkit-transition: none;
+    -moz-transition: none;
+    -ms-transition: none;
+    -o-transition: none;
+    transition: none;
+}​
