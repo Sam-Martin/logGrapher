@@ -12,7 +12,10 @@ function logGrapher(parentWrapper){
 	
 	// Define the log sources array
 	this.logSources = [];
-	
+
+	// Define the chart series array
+	this.chartSeriesArray = [];
+
 	// Initialise the parentElement
 	this.parentWrapper.append(
 		'<div class="log-sources-settings-modal modal hide fade" tabindex="-1" role="dialog" aria-labelledby="log-sources-settings-modal-label" aria-hidden="true">'+
@@ -175,7 +178,10 @@ logGrapher.prototype.deleteLogSource = function(ev){
 
 
 
-// Starting function once all logs have been assigned configuration values and are ready for processing
+/***********
+	 Function to kick off log processing (downloading, csv parsing, etc) once all logs have been assigned configuration values and are ready for processing
+*************/
+
 logGrapher.prototype.processLogSources = function(){
 	
 
@@ -199,9 +205,61 @@ logGrapher.prototype.processLogSources = function(){
 			
 		}
 	});
+
+	// Okay, we've sent off all the logs to process, let's just set a timer loop going to wait until they've all returned
+	this.waitForLogSources();
+
 }
 
+/*************
+	Function to loop over itself and wait until logs have been processed
+**************/
+logGrapher.prototype.waitForLogSources = function(){
 
+	var result = true;
+	var logGrapherObj = this;
+	// Loop through each log source and if we find one that's not processed, kick off the timer again
+	$.each(logGrapherObj.logSources, function(index, logSourceObj){
+
+		if(logSourceObj.status != "processed"){
+			
+			setTimeout(function(){logGrapherObj.waitForLogSources();}, 500);
+
+			log("Log sources haven't finished processing, waiting 500ms", "verbose");
+			
+			result = false;
+		}
+	});
+
+	if(result){
+		// Woohoo! all done! render chart!
+		$('#jqChart').jqChart({
+			title: {
+				text: ' Test.',
+				font: '18px sans-serif'
+			},
+			axes: [{
+				type: 'dateTime',
+				location: 'bottom',
+				zoomEnabled: true
+			}],
+			border: {
+				strokeStyle: '#6ba851'
+			},
+			tooltips: {
+				type: 'shared'
+			},
+			crosshairs: {
+				enabled: true,
+				hLine: false,
+				vLine: {
+					strokeStyle: '#cc0a0c'
+				}
+			},
+			series: logGrapherObj.chartSeriesArray
+		});  
+	}
+}
 
 /***************************************************
 	Log Grapher Source class
@@ -225,7 +283,8 @@ logGrapherLogSource = function(){
 		currentSourceType: "csv",
 		logPreview: null,
 		fileName: null,
-		logGrapherObj: null
+		logGrapherObj: null, // Reference to parent log grapher object
+		status: 'pendingSource' // pendingSource, pendingConfig, pendingProcessing, processed
 	};
 	
 	this.element = $('<li class="log-sources" style="display:none;">'+
@@ -744,43 +803,16 @@ logGrapherLogSource = function(){
 		
 		}else{
 
-		
-
 			// We've completed the CSV Parsing!
 			// Let's turn that CSV array into an object that contains the various different 'labels' as indices
-			curLogSource.seriesObj = curLogSource.createSeriesObjFromCSVArray(curLogSource.tempCSVArray);
+			// 		Then add it to the parent object's chart Series
+			curLogSource.logGrapherObj.chartSeriesArray = curLogSource.logGrapherObj.chartSeriesArray.concat(curLogSource.createSeriesArrayFromCSVArray(curLogSource.tempCSVArray));
+
+			// Set the status to processed
+			curLogSource.status = "processed";
 
 			// Clean up the old CSV array
 			delete curLogSource.tempCSVArray;
-
-		
-			// Now turn that object into a graph (temporarily here anyway, this is not the final location for log graphing)
-			
-			$('#jqChart').jqChart({
-				title: {
-					text: ' Test.',
-					font: '18px sans-serif'
-				},
-				axes: [{
-					type: 'dateTime',
-					location: 'bottom',
-					zoomEnabled: true
-				}],
-				border: {
-					strokeStyle: '#6ba851'
-				},
-				tooltips: {
-					type: 'shared'
-				},
-				crosshairs: {
-					enabled: true,
-					hLine: false,
-					vLine: {
-						strokeStyle: '#cc0a0c'
-					}
-				},
-				series: curLogSource.seriesObj
-			});  
 
 		}
 		// Clean up
@@ -788,8 +820,11 @@ logGrapherLogSource = function(){
 		delete rowsToProcess;
 	}
 
-	// Function to rows of individual entries into index oriented object
-	this.createSeriesObjFromCSVArray = function(csvRows){
+	/***************
+		 Function to convert rows of individual source entries from a CSV into index (i.e. label) oriented array of objects
+	**************/
+
+	this.createSeriesArrayFromCSVArray = function(csvRows){
 		
 
 		var seriesByNameObj = {};
