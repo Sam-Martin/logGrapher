@@ -7,6 +7,11 @@ function logGrapher(parentWrapper){
 	
 	// For the purposes of anonmyous and child functions, tie the parent obj to the var logGrapherObj
 	var logGrapherObj = this;
+
+	this.options = {
+		chartWidth:"auto",
+		chartHeight:"100%"
+	}
 	
 	this.parentWrapper = $(parentWrapper);
 	
@@ -16,42 +21,49 @@ function logGrapher(parentWrapper){
 	// Define the chart series array
 	this.chartSeriesArray = [];
 
+	// Define a blank callback onRenderChart to allow the user to add customisatins at the point of rendering a chart
+	this.onRenderChart = function(){};
+
 	// Initialise the parentElement
 	this.parentWrapper.append(
-		'<div class="log-sources-settings-modal modal hide fade" tabindex="-1" role="dialog" aria-labelledby="log-sources-settings-modal-label" aria-hidden="true">'+
-		'	<div class="modal-header">'+
-		'		<button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>'+
-		'		<h3 class="log-sources-settings-modal-label">Log Source Settings</h3>'+
-		'	</div>'+
-		'	<div class="modal-body">'+
-		'		<h3>Select Columns</h3>'+
-		'		<p>Pick which column corresponds with the label of the line(s) to be graphed, the value to graph on the vertical axis and the timestamp to graph on the horizontal axis</p>'+
-		'		<div class="well">'+
-		'			<table class="table table-bordered table-condensed">'+
-		'				<thead>'+
-		'					<tr>'+
-		'						<th>#1</th>'+
-		'						<th>#2</th>'+
-		'					</tr>'+
-		'				</thead>'+
-		'				<tbody>'+
-		'					<tr>'+
-		'						<td>01/02/2013</td>'+
-		'						<td>Potato</td>'+
-		'					</tr>'+
-		'				</tbody>'+
-		'			</table>'+
+		'<div class="log-setup-wrapper">'+
+		'	<div class="log-sources-settings-modal modal hide fade" tabindex="-1" role="dialog" aria-labelledby="log-sources-settings-modal-label" aria-hidden="true">'+
+		'		<div class="modal-header">'+
+		'			<button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>'+
+		'			<h3 class="log-sources-settings-modal-label">Log Source Settings</h3>'+
+		'		</div>'+
+		'		<div class="modal-body">'+
+		'			<h3>Select Columns</h3>'+
+		'			<p>Pick which column corresponds with the label of the line(s) to be graphed, the value to graph on the vertical axis and the timestamp to graph on the horizontal axis</p>'+
+		'			<div class="well">'+
+		'					<table class="table table-bordered table-condensed">'+
+		'					<thead>'+
+		'						<tr>'+
+		'							<th>#1</th>'+
+		'							<th>#2</th>'+
+		'						</tr>'+
+		'					</thead>'+
+		'					<tbody>'+
+		'						<tr>'+
+		'							<td>01/02/2013</td>'+
+		'							<td>Potato</td>'+
+		'						</tr>'+
+		'					</tbody>'+
+		'				</table>'+
+		'			</div>'+
+		'		</div>'+
+		'		<div class="modal-footer">'+
+		'			<button class="btn btn-primary" data-dismiss="modal" aria-hidden="true">Done</button>'+
 		'		</div>'+
 		'	</div>'+
-		'	<div class="modal-footer">'+
-		'		<button class="btn btn-primary" data-dismiss="modal" aria-hidden="true">Done</button>'+
-		'	</div>'+
+
+		'	<ol class="log-sources-wrapper"></ol>'+
+		'	<button class="log-sources-add-button btn" name="logSourceAdd"><i class="icon-plus"></i> Add Source</button>'+
+		'	<button class="btn btn-warning" class="log-sources-delete-source-button" style="display:none;">Undo</button>'+
+		'	<button class="btn-primary btn-large pull-right" name="renderGraphButton"><i class="icon-ok"></i> Graph</button>'+
+		'	<div class="clearfix"></div>'+
 		'</div>'+
-		'<ol class="log-sources-wrapper"></ol>'+
-		'<button class="log-sources-add-button btn" name="logSourceAdd"><i class="icon-plus"></i> Add Source</button>'+
-		'<button class="btn btn-warning" class="log-sources-delete-source-button" style="display:none;">Undo</button>'+
-		'<button class="btn-primary btn-large pull-right" name="renderGraphButton"><i class="icon-ok"></i> Graph</button>'+
-		'<div class="clearfix"></div>');
+		'<div class="log-chart" style="display:none;background-color:white;width:'+this.options.chartWidth+';height:'+this.options.chartHeight+'"></div>');
 	
 	// Assign the various important elements to variables
 	this.logSourcesWrapper = this.parentWrapper.find('.log-sources-wrapper');
@@ -185,29 +197,49 @@ logGrapher.prototype.deleteLogSource = function(ev){
 logGrapher.prototype.processLogSources = function(){
 	
 
-	// Hide log source config items
-	$('ul li', this.element).hide();
+	var logSourcesConfigured = true;
 
-	// Show progress elements
-	$('.log-sources-progress-bar-wrapper, .log-sources-progress-bar-label', this.element).css('display', 'inline-block');
-	
-	// Loop through the log sources and process them one by one (not the first one though, that's a template)
+	// Check whether all our property indices are defined
 	$.each(this.logSources, function(index, logSourceObj){
 		
-		
-		// Determine whether it's a local file or a url
-		if(logSourceObj.config.currentSource == "file"){
+		for(index in logSourceObj.config.indices){
 			
-			// Get the contents of the file, piece by piece, and then pass the data to processLogContent()
-			logSourceObj.fetchLogFromFile(logSourceObj.element, logSourceObj.processLogContent);
-			
-		}else if(logSourceObj.config.currentSource == "url"){
-			
+			if(!logSourceObj.config.indices[index]){
+				
+				// Oops, this index isn't configured, throw an error
+				logSourcesConfigured = false;
+				inputError($('.configureLogSource',logSourceObj.element), "Please configure this log source");
+			}
 		}
+		
+		
 	});
 
-	// Okay, we've sent off all the logs to process, let's just set a timer loop going to wait until they've all returned
-	this.waitForLogSources();
+	if(logSourcesConfigured){
+
+		// Hide log source config items
+		$('ul li', this.element).hide();
+
+		// Show progress elements
+		$('.log-sources-progress-bar-wrapper, .log-sources-progress-bar-label', this.element).css('display', 'inline-block');
+		
+		// Loop through the log sources and process them one by one (not the first one though, that's a template)
+		$.each(this.logSources, function(index, logSourceObj){
+			
+			// Determine whether it's a local file or a url
+			if(logSourceObj.config.currentSource == "file"){
+				
+				// Get the contents of the file, piece by piece, and then pass the data to processLogContent()
+				logSourceObj.fetchLogFromFile(logSourceObj.element, logSourceObj.processLogContent);
+				
+			}else if(logSourceObj.config.currentSource == "url"){
+				
+			}
+		});
+
+		// Okay, we've sent off all the logs to process, let's just set a timer loop going to wait until they've all returned
+		this.waitForLogSources();
+	}
 
 }
 
@@ -221,43 +253,67 @@ logGrapher.prototype.waitForLogSources = function(){
 	// Loop through each log source and if we find one that's not processed, kick off the timer again
 	$.each(logGrapherObj.logSources, function(index, logSourceObj){
 
-		if(logSourceObj.status != "processed"){
+		if(logSourceObj.status != "processed"){	
 			
-			setTimeout(function(){logGrapherObj.waitForLogSources();}, 500);
-
-			log("Log sources haven't finished processing, waiting 500ms", "verbose");
-			
+			// If even one has not got the status of processed, wait another 500ms
 			result = false;
+			
 		}
 	});
 
 	if(result){
 		// Woohoo! all done! render chart!
-		$('#jqChart').jqChart({
-			title: {
-				text: ' Test.',
-				font: '18px sans-serif'
-			},
-			axes: [{
-				type: 'dateTime',
-				location: 'bottom',
-				zoomEnabled: true
-			}],
-			border: {
-				strokeStyle: '#6ba851'
-			},
-			tooltips: {
-				type: 'shared'
-			},
-			crosshairs: {
-				enabled: true,
-				hLine: false,
-				vLine: {
-					strokeStyle: '#cc0a0c'
-				}
-			},
-			series: logGrapherObj.chartSeriesArray
-		});  
+
+		// Call user's onRenderChart function
+		logGrapherObj.onRenderChart();
+
+		// Display a massive loading text and slideDown
+		$('.log-chart', logGrapherObj.parentWrapper).html('<h1>Rendering Chart...</h1>').slideDown();
+
+		// Slide up the settings 
+		$('.log-setup-wrapper',logGrapherObj.parentWrapper).slideUp(function(){
+
+			
+
+			// Now render the chart
+			$('.log-chart', logGrapherObj.parentWrapper).jqChart({
+				title: {
+					text: ' Test.',
+					font: '18px sans-serif'
+				},
+				background: '#ffffff',
+				axes: [{
+					type: 'dateTime',
+					location: 'bottom',
+					zoomEnabled: true
+				}],
+				mouseInteractionMode: 'zooming',
+				legend: {
+					visible:false
+				},
+				tooltips: {
+					//type: 'shared'
+				},
+				crosshairs: {
+					enabled: true,
+					hLine: false,
+					vLine: {
+						strokeStyle: '#cc0a0c'
+					}
+				},
+				series: logGrapherObj.chartSeriesArray
+			});  
+		});
+
+		// Make the chart resizable (very slow)
+		//$('#jqChart').resizable();
+
+	}else{
+
+		// Wait 500ms because at least one has not finished.
+		setTimeout(function(){logGrapherObj.waitForLogSources();}, 500);
+
+		log("Log sources haven't finished processing, waiting 500ms", "verbose");
 	}
 }
 
@@ -275,9 +331,9 @@ logGrapherLogSource = function(){
 	
 	this.config = {
 		indices: {
-			timestampIndex: -1,
-			valueIndex: -1,
-			labelIndex: -1
+			timestampIndex: null,
+			valueIndex: null,
+			labelIndex: null
 		},
 		currentSource: "file",
 		currentSourceType: "csv",
@@ -399,9 +455,6 @@ logGrapherLogSource = function(){
 		// Show Modal
 		this.logGrapherObj.logSourcesSettingsModal.modal('show');
 		
-		// Tie the modal to the current log source
-		this.logGrapherObj = currentlyActiveLogSource = this;
-
 		// Show/hide buttons as appropriate
 		this.displayLogSourceConfigButtons(logSourceRow, logPreviewTable.find('thead'));
 		
@@ -474,10 +527,9 @@ logGrapherLogSource = function(){
 		// Show the success
 		inputSuccess(formElement);
 		
-		
-		
 		// Prompt to configure the CSV
-		elementAttachedPopover($('.config.indicesureLogSource', this.element).addClass('btn-primary'), "Success", "Please configure log source"); //TODO
+		console.log(curLogSource.element); //debug
+		elementAttachedPopover($('.configureLogSource', curLogSource.element).addClass('btn-primary'), "Success", "Please configure log source");
 		
 		
 		
@@ -589,7 +641,7 @@ logGrapherLogSource = function(){
 		if(this.config.indices[logSourceAttribute] == columnIndex){
 			
 			// Remove the selected index as the selected attribute (e.g. column 0 = timestamp)
-			this.config.indices[logSourceAttribute] = -1;
+			this.config.indices[logSourceAttribute] = null;
 			
 		}else{
 			
@@ -619,7 +671,7 @@ logGrapherLogSource = function(){
 		// Show/hide attribute selection buttons as appropriate
 		$.each(this.config.indices, function(logSourceAttributeName, logSourceAttributeIndex){
 			
-			if(logSourceAttributeIndex != -1){
+			if(logSourceAttributeIndex != null){
 				
 				// Increment the index by 1 so that it compensates for the blank <th> that is a spacer for the row ID
 				logSourceAttributeIndex++;
@@ -635,7 +687,7 @@ logGrapherLogSource = function(){
 			}else{
 				
 				// logSourceAttributeIndex show all buttons (except in cells with btn-primary (i.e. an attribute already assigned to this column))
-				headerRow.find('th:not(:nth-child('+logSourceAttributeIndex+')):not(:has(button.btn-primary)) button[value='+logSourceAttributeName+']').show();
+				headerRow.find('th:not(:has(button.btn-primary)) button[value='+logSourceAttributeName+']').show();
 			}
 		});
 	}
@@ -650,8 +702,15 @@ logGrapherLogSource = function(){
 		// Display message
 		$('.log-sources-progress-bar-label',this.element).text(message);
 		
-		// Display percent
-		$('.log-sources-progress-bar-wrapper > .progress > .bar', this.element).css('width', percentage);
+		if(percentage>=0){
+
+			// Display percent
+			$('.log-sources-progress-bar-wrapper').show();
+			$('.log-sources-progress-bar-wrapper > .progress > .bar', this.element).css('width', percentage);
+		}else{
+
+			$('.log-sources-progress-bar-wrapper').hide();
+		}
 	}
 		
 	
@@ -668,11 +727,8 @@ logGrapherLogSource = function(){
 			return;
 		}
 		
-		
 		// Build the string from the file in pieces, to prevent hanging
 		this.readLocalFileSlice(files[0], callback);
-			
-		
 		
 	}
 	
@@ -695,7 +751,7 @@ logGrapherLogSource = function(){
 		var percentage = Math.round((endBytes/file.size)*10000)/100 // The odd division and multiplication allows us to get two decimal places
 		this.showProgress(
 			percentage, 
-			percentage + "% uploaded file"
+			percentage + "% imported file"
 		);
 		
 		
@@ -741,6 +797,10 @@ logGrapherLogSource = function(){
 			curLogSource.parseCSVLoop(splitCSV, 0);
 		}
 	}
+
+	
+
+
 
 	/************
 		Function to loop through the CSV line by line and pass it to the webworker
@@ -803,10 +863,21 @@ logGrapherLogSource = function(){
 		
 		}else{
 
-			// We've completed the CSV Parsing!
-			// Let's turn that CSV array into an object that contains the various different 'labels' as indices
-			// 		Then add it to the parent object's chart Series
-			curLogSource.logGrapherObj.chartSeriesArray = curLogSource.logGrapherObj.chartSeriesArray.concat(curLogSource.createSeriesArrayFromCSVArray(curLogSource.tempCSVArray));
+			// We've completed the CSV Parsing
+
+			// Update the user on our progress
+			this.showProgress(
+				-1,  // No progress bar
+				"Converting data into chart object"
+			);
+			
+			// 2) Then add it to the parent object's chart Series
+			curLogSource.logGrapherObj.chartSeriesArray = curLogSource.logGrapherObj.chartSeriesArray.concat(
+
+				// 1) Let's turn that CSV array into an object that contains the various different 'labels' as indices
+				curLogSource.createSeriesArrayFromCSVArray(curLogSource.tempCSVArray)
+			);
+			
 
 			// Set the status to processed
 			curLogSource.status = "processed";
@@ -820,6 +891,8 @@ logGrapherLogSource = function(){
 		delete rowsToProcess;
 	}
 
+
+
 	/***************
 		 Function to convert rows of individual source entries from a CSV into index (i.e. label) oriented array of objects
 	**************/
@@ -831,22 +904,18 @@ logGrapherLogSource = function(){
 		var seriesByNameArray =[];
 		var numSeries = 0;
 
-
-		// Suitable only for test data
-		var settings = {
-			timestampIndex: 2,
-			valueIndex: 0,
-			labelIndex: 3
-		}
+		log("ValueIndex: "+curLogSource.config.indices.valueIndex+"\r\n"+
+			"TimestampIndex: "+curLogSource.config.indices.timestampIndex+"\r\n"+
+			"seriesNameIndex: "+curLogSource.config.indices.labelIndex,"verbose");
 		
 		// Loop through the rows and aggregate the series (defined by 'labels') into objects
 		for(key in csvRows){
 		
 						
 			var row = csvRows[key];
-			var val = row[settings.valueIndex];
-			var timestamp = row[settings.timestampIndex];
-			var seriesName = row[settings.labelIndex];
+			var val = row[curLogSource.config.indices.valueIndex-1];
+			var timestamp = row[curLogSource.config.indices.timestampIndex-1];
+			var seriesName = row[curLogSource.config.indices.labelIndex-1];
 
 
 			if (parseInt(val) >= 0 && seriesName.length > 0) {
@@ -875,9 +944,15 @@ logGrapherLogSource = function(){
 		}
 
 		// Now loop through each series and add it into an array so it's jqCharts compatible
-		$.each(seriesByNameObj, function(index, dataPoints){
+		$.each(seriesByNameObj, function(seriesName, dataPoints){
+
+			// Sort dataPoints by time while we're here
+			// Loop through each series
+			dataPoints.sort(sortByTimestamp);
+	
 
 			seriesByNameArray.push({
+				title: seriesName,
 				type: "line",
 				data: dataPoints,
 				markers: null
@@ -959,4 +1034,13 @@ function inputSuccess(formElement, successMessage){
 
 var log = function(string){
 	console.log(string);
+}
+
+function sortByTimestamp(a, b) {
+	// The unary + operator forces the javascript engine to call the objects valueOf method - and so it is two primitives that are being compared.
+	// http://stackoverflow.com/questions/2888841/javascript-date-comparison
+
+	if (+a[0] < +b[0]) return -1;
+	if (+a[0] > +b[0]) return 1;
+	return 0;
 }

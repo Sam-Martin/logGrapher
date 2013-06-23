@@ -27,17 +27,12 @@ main{
 	display:block;
 }
 
-/* 
-	Log Sources CSS
-	
-*/
-#log-sources-well{
+
+body > div.hero-unit, #log-sources-well{
 	min-width:605px;
 	width:50%;
 	margin:20px auto;
 }
-
-
 
 
 /*
