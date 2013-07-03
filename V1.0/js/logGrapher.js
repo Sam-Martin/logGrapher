@@ -33,10 +33,24 @@ function logGrapher(parentWrapper){
 		'			<h3 class="log-sources-settings-modal-label">Log Source Settings</h3>'+
 		'		</div>'+
 		'		<div class="modal-body">'+
-		'			<h3>Select Columns</h3>'+
+		'			<h3>Date Format</h3>'+
+		'			<div class="well">'+
+		'				<label>Select from defaults:'+
+		'					<select name="logSourceDateFormatDefaults">'+
+		'						<option value="DD/MM/YYYY HH:mm:ss">DD/MM/YYYY HH:mm:ss</option>'+
+		'						<option value="MM/DD/YYYY HH:mm:ss">MM/DD/YYYY HH:mm:ss</option>'+
+		'					</select>'+
+		'				</label>'+
+		'				<h4>Or</h4>'+
+		'				<label>Custom: <i class="icon-help"/>'+
+		'					<input type="text" name="logSourceDateFormatCustom"/>'+
+		'				</label>'+
+		'				<label><strong>Realtime Example:</strong> <em class="log-sources-settings-date-format-example">NULL</em></label>'+
+		'			</div>'+
+		'			<h3>Columns</h3>'+
 		'			<p>Pick which column corresponds with the label of the line(s) to be graphed, the value to graph on the vertical axis and the timestamp to graph on the horizontal axis</p>'+
 		'			<div class="well">'+
-		'					<table class="table table-bordered table-condensed">'+
+		'				<table class="table table-bordered table-condensed">'+
 		'					<thead>'+
 		'						<tr>'+
 		'							<th>#1</th>'+
@@ -72,6 +86,7 @@ function logGrapher(parentWrapper){
 	/*
 		Tie event triggers to GUI elements
 	*/
+
 	$('button[name=logSourceAdd]', this.parentWrapper).click(function(ev){
 		logGrapherObj.addLogSource();
 	});
@@ -335,6 +350,7 @@ logGrapherLogSource = function(){
 			valueIndex: null,
 			labelIndex: null
 		},
+		dateFormat: "DD/MM/YYYY HH:mm:ss",
 		currentSource: "file",
 		currentSourceType: "csv",
 		logPreview: null,
@@ -391,7 +407,7 @@ logGrapherLogSource = function(){
 		if(!(logPreview = this.config.logPreview)){
 			
 			// Show error
-			elementAttachedPopover(ev.currentTarget, "Error", "Please select a valid log source");
+			elementAttachedPopover($('input[name=logFile]',logSourceRow), "Error", "Please select a valid log source");
 			
 			// Cancel the wedding!
 			return;
@@ -463,6 +479,28 @@ logGrapherLogSource = function(){
 			
 			curLogSource.selectLogSourceProperty(ev);
 		});
+
+		// Bind change date format events
+		$('select[name=logSourceDateFormatDefaults]', this.parentWrapper).change(function(ev){
+			curLogSource.config.dateFormat = $(ev.currentTarget).val();
+			
+			// Test whether the date parses
+			curLogSource.testDateParsing(ev);
+		});
+
+		$('input[name=logSourceDateFormatCustom]', this.parentWrapper).keyup(function(ev){
+			var val = $(ev.currentTarget).val();
+
+			// If the custom value is populated use that, otherwise use the currently selected default
+			if(val.length > 0){
+				curLogSource.config.dateFormat = val;
+			}else{
+				curLogSource.config.dateFormat = $('input[name=logSourceDateFormatDefaults]', curLogSource.element).val();
+			}
+
+			// Test whether the date parses
+			curLogSource.testDateParsing(ev);
+		});
 	}
 	
 	/***************
@@ -528,7 +566,6 @@ logGrapherLogSource = function(){
 		inputSuccess(formElement);
 		
 		// Prompt to configure the CSV
-		console.log(curLogSource.element); //debug
 		elementAttachedPopover($('.configureLogSource', curLogSource.element).addClass('btn-primary'), "Success", "Please configure log source");
 		
 		
@@ -621,6 +658,41 @@ logGrapherLogSource = function(){
 
 		
 	}
+
+	/********************
+		Function to test parsing of dates using date format
+	*********************/
+	this.testDateParsing = function(ev){
+
+		var curLogSource = this;
+		var timestampIndex = curLogSource.config.indices.timestampIndex;
+
+		console.log(timestampIndex); //debug
+
+		// Check to see if the user has selected a date column, and suggest they should if they haven't
+		if(timestampIndex == null){
+			inputError(ev.currentTarget, "Select a timestamp column to see if it parses!");
+		}else{
+
+			// Loop through all cells in the date column
+			$('table tbody tr td:nth-child('+(timestampIndex+1)+')',curLogSource.logSourcesSettingsModal).each(function(index, dateCell){
+				var dateCell = $(dateCell);
+				// Initialise the originaltext .data val so we don't pollute things
+				var originalText = typeof(dateCell.data('originalText')) == "undefined" ? dateCell.text() :  dateCell.data('originalText');
+				dateCell.data('originalText',originalText);
+
+				// Now try parsing the date and replacing the cell text with the result
+				var parsedDate = moment(originalText, curLogSource.config.dateFormat);
+				dateCell.text(parsedDate);
+				
+				// If the date's valid, use it as the example (this will show the last valid date as an example due to the loop)
+				if(parsedDate.isValid()){
+					$('.log-sources-settings-date-format-example', curLogSource.logSourcesSettingsModal).text(originalText + " to "+ parsedDate.format());
+				}
+			});
+		}
+	}
+
 	
 
 	/*******************
