@@ -61,7 +61,7 @@
 	text-overflow:ellipsis;
 }
 
-li.log-sources-source-url, li.log-sources-progress-bar-wrapper {
+li.log-sources-source-url, li.log-sources-progress-bar-wrapper, .log-sources-configuration-wrapper {
 	display:none;
 }
 

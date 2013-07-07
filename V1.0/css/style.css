@@ -28,7 +28,7 @@ main{
 }
 
 
-body > div.hero-unit, #log-sources-well{
+body > div.hero-unit, #log-grapher-well{
 	min-width:605px;
 	width:50%;
 	margin:20px auto;
