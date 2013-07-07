@@ -12,11 +12,14 @@ function logGrapher(parentWrapper){
 		chartWidth:"auto",
 		chartHeight:"100%"
 	}
-	
+
 	this.parentWrapper = $(parentWrapper);
 	
 	// Define the log sources array
 	this.logSources = [];
+
+	// Define the log deletion queue
+	this.logDeletionQueue = [];
 
 	// Define the chart series array
 	this.chartSeriesArray = [];
@@ -35,7 +38,7 @@ function logGrapher(parentWrapper){
 		'	<ol class="log-sources-wrapper"></ol>'+
 		'	<div class="log-graph-buttons">'+
 		'		<button class="log-sources-add-button btn" name="logSourceAdd"><i class="icon-plus"></i> Add Source</button>'+
-		'		<button class="btn btn-warning" class="log-sources-delete-source-button" style="display:none;">Undo</button>'+
+		'		<button class="btn btn-warning log-sources-undo-delete-source-button" style="display:none;">Undo</button>'+
 		'		<button class="btn-primary btn-large pull-right" name="renderGraphButton"><i class="icon-ok"></i> Graph</button>'+
 		'		<div class="clearfix"></div>'+
 		'	</div>'+
@@ -86,64 +89,112 @@ logGrapher.prototype.addLogSource = function(){
 	
 }
 
+
 // Delete log source
-logGrapher.prototype.deleteLogSource = function(ev){
-	
+logGrapher.prototype.deleteLogSource = function(curLogSource){
+	var logGrapherObj = this;
 	var undoTimer = 5000; // Five seconds to undo the deletion!
 	var undoButton;
 	
-	// Find any other log sources with pending deletions and finish them off 
-	$('#log-sources-wrapper [data-pending-deletion=true]').remove();
-	
+			
 	
 	// Slide up and detach the log source in question
-	var lastDeletedLogSource = $(ev.srcElement).parents('.log-sources');
-	lastDeletedLogSource.data('pendingDeletion', true).slideUp(function(){$(this).detach();});
+	curLogSource.element.slideUp(function(){$(this).detach();});
 	
 	// Unbind any previous clicks
-	undoButton = $('#log-sources-delete-source-button').fadeIn().unbind("click");
+	undoButton = $('.log-sources-undo-delete-source-button', logGrapherObj.parentWrapper).fadeIn().unbind("click");
 	
 	// Stop the undo button being hidden prematurely
 	clearInterval(undoButton.data('timer'));
 	
+	// Add log source to deletion queue
+	logGrapherObj.logDeletionQueue.push({logSource:curLogSource, deletionTimestamp:new Date()});
 	
 	// Bind undo action to undo button
 	undoButton.click(function(){
-		
-		// Cancel any currently running animations
-		lastDeletedLogSource.stop()
-			.data('pendingDeletion', false); // Cancel the pending deletion;
-		
-		// If there it's not yet detached, just show it
-		if(lastDeletedLogSource.parents('html').length > 0 ){
-			
-			// Unhide that log source
-			lastDeleted.slideDown(); 
-		}else{
-			
-			// Otherwise, add it back in
-			lastDeletedLogSource.appendTo('#log-sources-wrapper');
-			lastDeletedLogSource.hide().slideDown();
+
+		// Determine last deleted log source
+		var lastDeletedLogSource;
+
+		console.log(logGrapherObj.logDeletionQueue); //debug
+		for(logDeletionQueueIndex in logGrapherObj.logDeletionQueue){
+			curLogSource = logGrapherObj.logDeletionQueue[logDeletionQueueIndex];
+			lastDeletedLogIndex =  typeof(lastDeletedLogSource) == "undefined" || lastDeletedLogSource.deletionTimestamp > curLogSource.deletionTimestamp ?logDeletionQueueIndex : lastDeletedLogIndex ;
+			lastDeletedLogSource = typeof(lastDeletedLogSource) == "undefined" || lastDeletedLogSource.deletionTimestamp > curLogSource.deletionTimestamp ? curLogSource : lastDeletedLogSource;
 		}
 		
-		// Hide the undo button
-		undoButton.fadeOut();
-		
-	});
-	
-	// After the specified amount of time, if the deletion hasn't been cancelled, remove it permanently
-	undoButton.data('timer', setTimeout(function(){
+		console.log(lastDeletedLogSource); //debug
+		// Cancel any currently running animations
+		lastDeletedLogSource.logSource.element.stop();
+
+		// Remove it from the queue
+		logGrapherObj.logDeletionQueue.splice(lastDeletedLogIndex,1);
+
+		// If there it's not yet detached, just show it
+		if(lastDeletedLogSource.logSource.element.parents('html').length > 0 ){
 			
-			if(lastDeletedLogSource.data('pendingDeletion')){
-				lastDeletedLogSource.remove();
-				// Remove the undo button
-				undoButton.fadeOut();
-			}
-		}, undoTimer)
-	);
+			log("Found last deleted log source in DOM, showing it again", "verbose");
+			// Unhide that log source
+			lastDeletedLogSource.logSource.element.slideDown(); 
+		}else{
+			log("Could not find last deleted log source in DOM, adding back in manually", "verbose");
+	
+			// Otherwise, add it back in
+			lastDeletedLogSource.logSource.element.appendTo('.log-sources-wrapper', logGrapherObj.parentWrapper);
+			lastDeletedLogSource.logSource.element.hide().slideDown();
+		}
+
+		// Reset the undo button in case there are more in the queue
+		logGrapherObj.waitLogDeletionCleanup();
+			
+	});
+		
+	logGrapherObj.waitLogDeletionCleanup();
 	
 }
 
+logGrapher.prototype.waitLogDeletionCleanup = function(){
+
+	var logGrapherObj = this;
+
+	var	undoButton = $('.log-sources-undo-delete-source-button', logGrapherObj.parentWrapper);
+
+	// Stop the undo button being hidden prematurely
+	clearInterval(undoButton.data('timer'));
+
+	console.log(logGrapherObj.logDeletionQueue.length);//debug
+
+	if(logGrapherObj.logDeletionQueue.length > 0){
+		
+		
+		// After the specified amount of time, if the deletion hasn't been cancelled, remove it permanently
+		undoButton.data('timer', setTimeout(function(){
+				
+			// Delete all log sources from the queue that were deleted more than 5 seconds ago
+			for(logDeletionQueueIndex in logGrapherObj.logDeletionQueue){
+				curLogSource = logGrapherObj.logDeletionQueue[logDeletionQueueIndex];
+				if( curLogSource.deletionTimestamp.getTime() < (new Date).getTime() - 5){
+					
+					log("Deleting log source object", "verbose");
+					delete curLogSource;
+					// Remove it from the queue
+					logGrapherObj.logDeletionQueue.splice(logDeletionQueueIndex,1);
+
+					// Hide the undo button if we can
+					if(logGrapherObj.logDeletionQueue.length > 0){
+						logGrapherObj.waitLogDeletionCleanup();
+					}else{
+							undoButton.fadeOut();
+					}
+				}
+				
+			}
+		},5000));
+	}else{
+		// No more logs in the deletion queue, hide the undo button
+		undoButton.fadeOut();
+	}
+}
 
 
 /***********
@@ -214,6 +265,15 @@ logGrapher.prototype.toggleLogSourceConfiguration = function(endState){
 	var endState = typeof(endState) == "undefined" ? oppositeofCurrent : endState;
 
 	if(endState == "hide" ){
+
+		// Loop through the log sources and populate their names
+		for( i in logGrapherObj.logSources){
+			var curLogSource = logGrapherObj.logSources[i];
+			
+			if(curLogSource.config.fileName != null){
+				$('.logSourceFileName',curLogSource.element).text(curLogSource.config.fileName);
+			}
+		}
 
 		// Show the overall graph buttons, the log sources, the header
 		$('.log-graph-buttons, .log-sources-header, .log-sources-wrapper',logGrapherObj.parentWrapper).slideDown();

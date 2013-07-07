@@ -33,6 +33,9 @@ logGrapherLogSource = function(){
 		'			<button class="btn btn-danger" name="logSourceDeleteButton"><i class="icon-trash"></i></button>'+
 		'			<button class="btn configureLogSource" name="logSourceConfigureButton"><i class="icon-wrench"></i> Configure</button>'+
 		'		</li>'+
+		'		<li class="logSourceFileName">'+
+		'			No file selected.'+
+		'		</li>'+
 		'		<li class="log-sources-progress-bar-wrapper">'+
 		'			<div class="progress progress-striped active">'+
 		'				<div class="bar" style="width:50%"></div>'+
@@ -49,7 +52,7 @@ logGrapherLogSource = function(){
 
 	// Delete log source button
 	$('button[name=logSourceDeleteButton]',this.element).click(function(ev){
-		curLogSource.deleteLogSource(ev);
+		curLogSource.logGrapherObj.deleteLogSource(curLogSource);
 	});
 	
 	// Configure log source button
@@ -60,6 +63,9 @@ logGrapherLogSource = function(){
 	
 	
 	
+	
+
+
 	
 	/***************
 		Function to fetch a preview of the log source
@@ -210,11 +216,6 @@ logGrapherLogSource = function(){
 		
 	}
 
-	
-
-	
-
-	
 	
 	/********
 		Function to display progress of log processing
