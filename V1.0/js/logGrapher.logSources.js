@@ -271,26 +271,35 @@ logGrapherLogSource = function(){
 
 		var curLogSource = this;
 		var logGrapherObj = curLogSource.logGrapherObj;
+		var fileInput;
 
 
 		// Hide the previous 'latest' configuration element, then delete it
 		$('.log-soures-configuration-inner-latest', logGrapherObj.logSourcesConfigurationWrapper).slideUp(function(){$(this).remove();});
 
+		// Get previous logfile element (if it exists)
+		if(curLogSource.config.currentSource == "File" && curLogSource.config.logFileElement != null){
+			fileInput = curLogSource.config.logFileElement;
+		}else{
+			fileInput =	$('		<input type="file" name="logFile"/>');
+		}
+
 		// Show config HTML
-		logGrapherObj.logSourcesConfigurationWrapper.append(
-			'<div class="log-soures-configuration-inner-latest">'+
+		var configurationElement = 
+			$('<div class="log-soures-configuration-inner-latest">'+
 			'	<h3>Choose Source</h3>'+
 			'	<label class="control-label">URL:'+
 				'	<input type="text" name="logURL"/>'+
 			'	</label>'+
 			'	<h4>Or</h4>'+
-			'	<label class="control-label">'+
-			'		<input type="file" name="logFile"/>'+
+			'	<label class="control-label logsource-file-label">'+
 			'	</label>'+
 			'	<button class="btn btn-primary logsource-configuration-previous-button">Previous</button>'+
 			'	<button class="btn btn-primary logsource-configuration-next-button pull-right">Next</button>'+
-			'</div>'
-		).find('.log-soures-configuration-inner-latest').show();
+			'</div>');
+		$('.logsource-file-label', configurationElement).append(fileInput);
+		logGrapherObj.logSourcesConfigurationWrapper.append(configurationElement);
+		configurationElement.show();
 
 		// Hide the other UI elements in favour of the log source configuration
 		logGrapherObj.toggleLogSourceConfiguration('show');
