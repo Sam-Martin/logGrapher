@@ -278,16 +278,18 @@ logGrapherLogSource = function(){
 
 		// Show config HTML
 		logGrapherObj.logSourcesConfigurationWrapper.html(
-			'<h3>Choose Source</h3>'+
-			'<label class="control-label">URL:'+
-			'	<input type="text" name="logURL"/>'+
-			'</label>'+
-			'<h4>Or</h4>'+
-			'<label class="control-label">'+
-			'	<input type="file" name="logFile"/>'+
-			'</label>'+
-			'<button class="btn btn-primary logsource-configuration-next-button">Next</button>'
-		);
+			'<div class="log-soures-configuration-inner-latest">'+
+			'	<h3>Choose Source</h3>'+
+			'	<label class="control-label">URL:'+
+				'	<input type="text" name="logURL"/>'+
+			'	</label>'+
+			'	<h4>Or</h4>'+
+			'	<label class="control-label">'+
+			'		<input type="file" name="logFile"/>'+
+			'	</label>'+
+			'	<button class="btn btn-primary logsource-configuration-next-button">Next</button>'+
+			'</div>'
+		).find('.log-soures-configuration-inner-latest').show();
 
 		// Hide the other UI elements in favour of the log source configuration
 		logGrapherObj.toggleLogSourceConfiguration('show');
@@ -347,8 +349,8 @@ logGrapherLogSource = function(){
 		var curLogSource = this;
 		var logGrapherObj = curLogSource.logGrapherObj;
 
-		// Reset the log source config to blank
-		logGrapherObj.logSourcesConfigurationWrapper.html('');
+		// Hide the previous 'latest' configuration element, then delete it
+		$('.log-soures-configuration-inner-latest', logGrapherObj.logSourcesConfigurationWrapper).slideUp(function(){$(this).remove();});
 
 		// Check we have log preview data
 		if(!(logPreview = this.config.logPreview)){
@@ -412,17 +414,19 @@ logGrapherLogSource = function(){
 
 		// Insert the new configuration form into the DOM
 		logGrapherObj.logSourcesConfigurationWrapper.append(
-			'<h3>Choose schema</h3>'+
-			'<table class="table table-bordered table-condensed">'+
-			'	<thead>'+
-					logPreviewTableHeader+
-			'	</thead>'+
-			'	<tbody>'+
-					logPreviewTableBody+
-			'	</tbody>'+
-			'</table>'+
-			'<button class="btn btn-primary logsource-configuration-next-button">Next</button>'
-		);
+			'<div class="log-soures-configuration-inner-latest">'+
+			'	<h3>Choose schema</h3>'+
+			'	<table class="table table-bordered table-condensed">'+
+			'		<thead>'+
+						logPreviewTableHeader+
+			'		</thead>'+
+			'		<tbody>'+
+						logPreviewTableBody+
+			'		</tbody>'+
+			'	</table>'+
+			'	<button class="btn btn-primary logsource-configuration-next-button">Next</button>'+
+			'</div>'
+		).find('.log-soures-configuration-inner-latest').slideDown();
 
 		// Show/hide index buttons as dictated by any existing configuration
 		curLogSource.displayLogSourceConfigButtons(logGrapherObj.logSourcesConfigurationWrapper.find('thead'));
@@ -465,32 +469,34 @@ logGrapherLogSource = function(){
 		var logGrapherObj = curLogSource.logGrapherObj;
 
 
-		// Reset the log source config to blank
-		logGrapherObj.logSourcesConfigurationWrapper.html('');
+		// Hide the previous 'latest' configuration element, then delete it
+		$('.log-soures-configuration-inner-latest', logGrapherObj.logSourcesConfigurationWrapper).slideUp(function(){$(this).remove();});
 
 		// Show config HTML
-		logGrapherObj.logSourcesConfigurationWrapper.html(
-			'<h3>Choose date format</h3>'+
-			'<div class="control-group">'+
-			'	<label>Select from defaults:'+
-			'		<select name="logSourceDateFormatDefaults">'+
-			'			<option value="DD/MM/YYYY HH:mm:ss">DD/MM/YYYY HH:mm:ss</option>'+
-			'			<option value="MM/DD/YYYY HH:mm:ss">MM/DD/YYYY HH:mm:ss</option>'+
-			'		</select>'+
-			'	</label>'+
-			'</div>'+
-			'<h4>Or</h4>'+
-			'<div class="control-group">'+
-			'	<label>Custom: '+
-			'		<input type="text" name="logSourceDateFormatCustom"/> '+
-			'		<a href="http://momentjs.com/docs/#/parsing/string-format/" target="_blank" title="How do I format dates?">'+
-			'			<i class="icon-question-sign"> </i>'+
-			'		</a>'+
-			'	</label>'+
-			'</div>'+
-			'<label><strong>Realtime Example:</strong> <em class="log-sources-settings-date-format-example">NULL</em></label>'+
-			'<button class="btn btn-primary logsource-configuration-next-button">Next</button>'
-		);
+		logGrapherObj.logSourcesConfigurationWrapper.append(
+			'<div class="log-soures-configuration-inner-latest">'+
+			'	<h3>Choose date format</h3>'+
+			'	<div class="control-group">'+
+			'		<label>Select from defaults:'+
+			'			<select name="logSourceDateFormatDefaults">'+
+			'				<option value="DD/MM/YYYY HH:mm:ss">DD/MM/YYYY HH:mm:ss</option>'+
+			'				<option value="MM/DD/YYYY HH:mm:ss">MM/DD/YYYY HH:mm:ss</option>'+
+			'			</select>'+
+			'		</label>'+
+			'	</div>'+
+			'	<h4>Or</h4>'+
+			'	<div class="control-group">'+
+			'		<label>Custom: '+
+			'			<input type="text" name="logSourceDateFormatCustom"/> '+
+			'			<a href="http://momentjs.com/docs/#/parsing/string-format/" target="_blank" title="How do I format dates?">'+
+			'				<i class="icon-question-sign"> </i>'+
+			'			</a>'+
+			'		</label>'+
+			'	</div>'+
+			'	<label><strong>Realtime Example:</strong> <em class="log-sources-settings-date-format-example">NULL</em></label>'+
+			'	<button class="btn btn-primary logsource-configuration-next-button">Next</button>'+
+			'</div>'
+		).find('.log-soures-configuration-inner-latest').slideDown();
 
 		// Hide the other UI elements in favour of the log source configuration
 		logGrapherObj.toggleLogSourceConfiguration('show');
@@ -539,23 +545,6 @@ logGrapherLogSource = function(){
 		});
 	}
 
-	/*******
-		Function to present modal box that allows user to configure the log source options
-
-		OBSOLETE
-	*********
-	
-	this.configureLogSource = function(ev){
-		
-		
-		// Show Modal
-		this.logGrapherObj.logSourcesSettingsModal.modal('show');
-		
-		
-
-		
-	}
-	*/
 
 
 	/*******************
