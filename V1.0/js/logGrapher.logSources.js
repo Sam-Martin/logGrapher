@@ -29,7 +29,7 @@ logGrapherLogSource = function(){
 	
 	this.element = $('<li class="log-sources" style="display:none;">'+
 		'	<ul>'+
-		'		<li>'+
+		'		<li class="log-sources-configuration-item">'+
 		'			<button class="btn btn-danger" name="logSourceDeleteButton"><i class="icon-trash"></i></button>'+
 		'			<button class="btn configureLogSource" name="logSourceConfigureButton"><i class="icon-wrench"></i> Configure</button>'+
 		'		</li>'+
@@ -273,11 +273,11 @@ logGrapherLogSource = function(){
 		var logGrapherObj = curLogSource.logGrapherObj;
 
 
-		// Reset the log source config to blank
-		logGrapherObj.logSourcesConfigurationWrapper.html('');
+		// Hide the previous 'latest' configuration element, then delete it
+		$('.log-soures-configuration-inner-latest', logGrapherObj.logSourcesConfigurationWrapper).slideUp(function(){$(this).remove();});
 
 		// Show config HTML
-		logGrapherObj.logSourcesConfigurationWrapper.html(
+		logGrapherObj.logSourcesConfigurationWrapper.append(
 			'<div class="log-soures-configuration-inner-latest">'+
 			'	<h3>Choose Source</h3>'+
 			'	<label class="control-label">URL:'+
@@ -287,14 +287,18 @@ logGrapherLogSource = function(){
 			'	<label class="control-label">'+
 			'		<input type="file" name="logFile"/>'+
 			'	</label>'+
-			'	<button class="btn btn-primary logsource-configuration-next-button">Next</button>'+
+			'	<button class="btn btn-primary logsource-configuration-previous-button">Previous</button>'+
+			'	<button class="btn btn-primary logsource-configuration-next-button pull-right">Next</button>'+
 			'</div>'
 		).find('.log-soures-configuration-inner-latest').show();
 
 		// Hide the other UI elements in favour of the log source configuration
 		logGrapherObj.toggleLogSourceConfiguration('show');
 
-		
+		// Activate 'previous' button
+		$('.logsource-configuration-previous-button', logGrapherObj.logSourcesConfigurationWrapper).click(function(ev){
+			logGrapherObj.toggleLogSourceConfiguration('hide');
+		})
 
 		// Activate 'next' button
 		$('.logsource-configuration-next-button',logGrapherObj.logSourcesConfigurationWrapper).click(function(ev){
@@ -424,7 +428,8 @@ logGrapherLogSource = function(){
 						logPreviewTableBody+
 			'		</tbody>'+
 			'	</table>'+
-			'	<button class="btn btn-primary logsource-configuration-next-button">Next</button>'+
+			'	<button class="btn btn-primary logsource-configuration-previous-button">Previous</button>'+
+			'	<button class="btn btn-primary logsource-configuration-next-button pull-right">Next</button>'+
 			'</div>'
 		).find('.log-soures-configuration-inner-latest').slideDown();
 
@@ -439,6 +444,11 @@ logGrapherLogSource = function(){
 
 		// Hide the other UI elements in favour of the log source configuration
 		logGrapherObj.toggleLogSourceConfiguration('show');
+
+		// Activate 'previous' button
+		$('.logsource-configuration-previous-button', logGrapherObj.logSourcesConfigurationWrapper).click(function(ev){
+			curLogSource.chooseLogSource();
+		})
 
 		// Activate 'next' button
 		$('.logsource-configuration-next-button',logGrapherObj.logSourcesConfigurationWrapper).click(function(ev){
@@ -494,7 +504,8 @@ logGrapherLogSource = function(){
 			'		</label>'+
 			'	</div>'+
 			'	<label><strong>Realtime Example:</strong> <em class="log-sources-settings-date-format-example">NULL</em></label>'+
-			'	<button class="btn btn-primary logsource-configuration-next-button">Next</button>'+
+			'	<button class="btn btn-primary logsource-configuration-previous-button">Previous</button>'+
+			'	<button class="btn btn-primary logsource-configuration-next-button pull-right">Next</button>'+
 			'</div>'
 		).find('.log-soures-configuration-inner-latest').slideDown();
 
@@ -508,8 +519,6 @@ logGrapherLogSource = function(){
 		$('select[name=logSourceDateFormatDefaults]', logGrapherObj.logSourcesConfigurationWrapper).change(function(ev){
 			curLogSource.config.dateFormat = $(ev.currentTarget).val();
 			
-			console.log($(ev.currentTarget).val()); //debug
-
 			// Test whether the date parses
 			curLogSource.config.hasValidDateFormat = curLogSource.testDateParsing(ev.currentTarget);
 		});
@@ -530,6 +539,10 @@ logGrapherLogSource = function(){
 
 		});
 
+		// Activate 'previous' button
+		$('.logsource-configuration-previous-button', logGrapherObj.logSourcesConfigurationWrapper).click(function(ev){
+			cutLogSource.chooseLogSchema();
+		})
 
 		// Activate 'next' button
 		$('.logsource-configuration-next-button',logGrapherObj.logSourcesConfigurationWrapper).click(function(ev){

@@ -224,9 +224,10 @@ logGrapher.prototype.processLogSources = function(){
 
 	if(logSourcesConfigured && this.logSources.length > 0){
 
-		console.log(this.logSources); //debug
 		// Hide log source config items
-		$('ul li', this.element).hide();
+		$('.log-sources-configuration-item', this.element).animate({
+			'opacity' : 'toggle',
+		});
 
 		// Show progress elements
 		$('.log-sources-progress-bar-wrapper, .log-sources-progress-bar-label', this.element).css('display', 'inline-block');
