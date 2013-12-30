@@ -3,7 +3,22 @@ function startGraphing() {
 	$('main').slideDown();
 }
 
+function showLogGrapher(){
+	startGraphing();
+	$('main > *').slideUp();
+	$('#log-grapher-well').slideDown();
+}
 
+function showFAQ(){
+	startGraphing();
+	$('main > *').slideUp();
+	$('#faq-well').slideDown();
+}
+function showFrameworks(){
+	startGraphing();
+	$('main > *').slideUp();
+	$('#framework-well').slideDown();
+}
 
 
 $(document).ready(function(){

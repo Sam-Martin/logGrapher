@@ -17,12 +17,10 @@
 		
 		<div class="navbar">
 			<div class="navbar-inner">
-				<a class="brand" href="#"># Nav</a>
 				<ul class="nav">
-					<li class="active"><a href="#">Home</a></li>
-					<li><a href="#">Graph It!</a></li>
-					<li><a href="#">FAQ</a></li>
-					<li><a href="#">Frameworks</a></li>
+					<li class="active"><a href="#" onClick="showLogGrapher()">Home</a></li>
+					<li><a href="#" onClick="showFAQ()">FAQ</a></li>
+					<li><a href="#" onClick="showFrameworks()">Frameworks</a></li>
 				</ul>
 			</div>
 		</div>
@@ -39,7 +37,27 @@
 		</div>
 		
 		<main>
-			<div class="well" id="log-grapher-well">
+			<div class="well" id="log-grapher-well"></div>
+			<div class="well" id="faq-well">
+				<h1>FAQ</h1>
+				<h2>Q) Why?</h2>
+				<p>Necessity mostly. I've found it very difficult to parse logs/stat dumps in programs like Excel, so I thought it was high time something was done about it.</p>
+				<h2>Q) Why not Splunk, Logstash, SolarWinds, etc.?</h2>
+				<p>These existing systems are great tools, but you need to have the time and budget to put them in place. Sometimes you need a log visualisation RIGHT NOW.</p>
+				<h2>Q) Can I use it?</h2>
+				<p>Of course! Pending the licenses of the respective frameworks/plugings involved! <br/> <a href="https://github.com/Toukakoukan/logGrapher">https://github.com/Toukakoukan/logGrapher</a></p>
+
+			</div>
+			<div class="well" id="framework-well">
+				<h1>Frameworks & Plugins</h1>
+				<ul>
+					<li>Twitter Bootstrap - <a href="http://getbootstrap.com/">http://getbootstrap.com/</a></li>
+					<li>jQuery - <a href="http://jquery.com">http://jquery.com</a></li>
+					<li>jquery-csv  - <a href="https://code.google.com/p/jquery-csv/">https://code.google.com/p/jquery-csv/</a></li>
+					<li>jqChart - <a href="http://www.jqchart.com/">http://www.jqchart.com/</a></li>
+					<li>Moment.js - <a href="http://momentjs.com/">http://momentjs.com/</a></li>
+				</ul>
+			</div>
 		</main>
 		
 		<!-- JS Frameworks & Plugins -->

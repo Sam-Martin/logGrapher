@@ -32,7 +32,7 @@ function logGrapher(parentWrapper){
 		'<div class="log-setup-wrapper">'+
 		' 	<div class="log-sources-header">'+
 		'		<h2>Log Sources</h2>'+
-		'		<p>Here you can specify one or more URLs or files to use as log sources. Valid formats are .CSV and <abbr title="As downloaded from LogGrapher.com">.LOGG </abbr>.</p>'+
+		'		<p>Here you can specify one or more URLs or files to use as log sources. Valid formats are .CSV <!--and <abbr title="As downloaded from LogGrapher.com">.LOGG </abbr>. --></p>'+
 		'	</div>'+
 		'	<div class="log-sources-configuration-wrapper"></div>'+
 		'	<ol class="log-sources-wrapper"></ol>'+
@@ -327,13 +327,15 @@ logGrapher.prototype.waitForLogSources = function(){
 			// Now render the chart
 			$('.log-chart', logGrapherObj.parentWrapper).jqChart({
 				title: {
-					text: ' Test.',
+					text: ' ',
 					font: '18px sans-serif'
 				},
 				background: '#ffffff',
 				axes: [{
 					type: 'dateTime',
 					location: 'bottom',
+					zoomEnabled: true
+				},{
 					zoomEnabled: true
 				}],
 				mouseInteractionMode: 'zooming',

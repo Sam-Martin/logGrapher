@@ -28,7 +28,7 @@ main{
 }
 
 
-body > div.hero-unit, #log-grapher-well{
+body > div.hero-unit, #log-grapher-well, #faq-well, #framework-well{
 	min-width:605px;
 	width:50%;
 	margin:20px auto;
@@ -40,6 +40,6 @@ body > div.hero-unit, #log-grapher-well{
 */
 
 
-main{
+main, #faq-well, #framework-well{
 	display:none;
 }

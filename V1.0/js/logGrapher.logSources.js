@@ -287,11 +287,11 @@ logGrapherLogSource = function(){
 		// Show config HTML
 		var configurationElement = 
 			$('<div class="log-soures-configuration-inner-latest">'+
-			'	<h3>Choose Source</h3>'+
+			'	<h3>Choose Source</h3> <!--'+
 			'	<label class="control-label">URL:'+
 				'	<input type="text" name="logURL"/>'+
 			'	</label>'+
-			'	<h4>Or</h4>'+
+			'	<h4>Or</h4> -->'+
 			'	<label class="control-label logsource-file-label">'+
 			'	</label>'+
 			'	<button class="btn btn-primary logsource-configuration-previous-button">Previous</button>'+
@@ -495,24 +495,33 @@ logGrapherLogSource = function(){
 		logGrapherObj.logSourcesConfigurationWrapper.append(
 			'<div class="log-soures-configuration-inner-latest">'+
 			'	<h3>Choose date format</h3>'+
-			'	<div class="control-group">'+
-			'		<label>Select from defaults:'+
-			'			<select name="logSourceDateFormatDefaults">'+
-			'				<option value="DD/MM/YYYY HH:mm:ss">DD/MM/YYYY HH:mm:ss</option>'+
-			'				<option value="MM/DD/YYYY HH:mm:ss">MM/DD/YYYY HH:mm:ss</option>'+
-			'			</select>'+
-			'		</label>'+
-			'	</div>'+
-			'	<h4>Or</h4>'+
-			'	<div class="control-group">'+
-			'		<label>Custom: '+
-			'			<input type="text" name="logSourceDateFormatCustom"/> '+
-			'			<a href="http://momentjs.com/docs/#/parsing/string-format/" target="_blank" title="How do I format dates?">'+
-			'				<i class="icon-question-sign"> </i>'+
-			'			</a>'+
-			'		</label>'+
-			'	</div>'+
-			'	<label><strong>Realtime Example:</strong> <em class="log-sources-settings-date-format-example">NULL</em></label>'+
+			'		<div class="pull-right">'+
+			'			<div class="alert alert-success log-sources-date-transform-alert"> <span class="log-sources-date-transform-alert-label">Out:</span> <span class="log-sources-settings-date-format-output"></span></div>'+
+			'		</div>'+
+			'		<div class="pull-left" style="text-align:center;">'+
+			'			<div class="alert log-sources-date-transform-alert">'+
+			'				<span class="log-sources-date-transform-alert-label">In:</span> <span class="log-sources-settings-date-format-input"></span>'+
+			'			</div> '+
+			'		</div>	'+
+			'		<div class="log-sources-date-transform-controls">'+
+			'			<div class="control-group">'+
+			'				<label>'+
+			'					<select name="logSourceDateFormatDefaults">'+
+			'						<option value="DD/MM/YYYY HH:mm:ss">DD/MM/YYYY HH:mm:ss</option>'+
+			'						<option value="MM/DD/YYYY HH:mm:ss">MM/DD/YYYY HH:mm:ss</option>'+
+			'					</select>'+
+			'				</label>'+
+			'			</div>'+
+			'			<h4>Custom</h4>'+
+			'			<div class="control-group">'+
+			'				<label>'+
+			'					<input type="text" name="logSourceDateFormatCustom"/> '+
+			'					<a href="http://momentjs.com/docs/#/parsing/string-format/" target="_blank" title="How do I format dates?">'+
+			'						<i class="icon-question-sign"> </i>'+
+			'					</a>'+
+			'				</label>'+
+			'			</div> '+
+			'		</div>'+
 			'	<button class="btn btn-primary logsource-configuration-previous-button">Previous</button>'+
 			'	<button class="btn btn-primary logsource-configuration-next-button pull-right">Next</button>'+
 			'</div>'
@@ -534,7 +543,7 @@ logGrapherLogSource = function(){
 
 		$('input[name=logSourceDateFormatCustom]', logGrapherObj.logSourcesConfigurationWrapper).keyup(function(ev){
 			var val = $(ev.currentTarget).val();
-			console.log(val); //debug
+			
 
 			// If the custom value is populated use that, otherwise use the currently selected default
 			if(val.length > 0){
@@ -655,7 +664,7 @@ logGrapherLogSource = function(){
 		}
 
 		// Reset to default error:
-		$('.log-sources-settings-date-format-example', curLogSource.logGrapherObj.logSourcesConfigurationWrapper.logSourcesSettingsModal).html("No valid dates found, please try a different date format, or click 'Back' to select a different date index");
+		$('.log-sources-settings-date-format-input', curLogSource.logGrapherObj.logSourcesConfigurationWrapper.logSourcesSettingsModal).html("No valid dates found, please try a different date format, or click 'Back' to select a different date index");
 
 		// Loop through all rows in the preview
 		for(rowID in curLogSource.config.logPreview){
@@ -668,7 +677,8 @@ logGrapherLogSource = function(){
 				
 				// If the date's valid, use it as the example (this will show the last valid date as an example due to the loop)
 				if(parsedDate.isValid()){
-					$('.log-sources-settings-date-format-example', curLogSource.logGrapherObj.logSourcesConfigurationWrapper.logSourcesSettingsModal).html(curDate + " <strong>to</strong> "+ parsedDate.format("YYYY-MM-DD HH:mm:ss.SSS"));
+					$('.log-sources-settings-date-format-input', curLogSource.logGrapherObj.logSourcesConfigurationWrapper.logSourcesSettingsModal).html(curDate);
+					$('.log-sources-settings-date-format-output', curLogSource.logGrapherObj.logSourcesConfigurationWrapper.logSourcesSettingsModal).html(parsedDate.format("YYYY-MM-DD HH:mm:ss.SSS"));
 					inputSuccess(formElement);
 					return true;
 				}else{
