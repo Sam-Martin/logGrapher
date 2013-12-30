@@ -75,6 +75,7 @@ li.log-sources-source-url, li.log-sources-progress-bar-wrapper, .log-sources-con
 	font-weight:bold;
 }
 .log-sources-date-transform-controls{
+	clear:both;
 	text-align: center
 }
 

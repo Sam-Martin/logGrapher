@@ -144,7 +144,7 @@ logGrapherLogSource = function(){
 		// Fetch preview from local file
 			
 		var startBytes = 0;
-		var endBytes = 500;
+		var endBytes = 511;
 		var files = formElement.get(0).files;
 		var reader = new FileReader();
 		
@@ -160,17 +160,20 @@ logGrapherLogSource = function(){
 		endBytes = (endBytes < file.size) ? endBytes : file.size;
 
 		// Once the slice has finished pass it on to the validation function
-		reader.onloadend = function(evt) {
-		  if (evt.target.readyState == FileReader.DONE) { // DONE == 2
-			
+		reader.onload = function(evt) {
+		  	
+		  	log("Preview loaded")
+		  	//var result = String.fromCharCode.apply(null, new Uint8Array(evt.target.result));
+		  	
+		  	var result = parseUint8ARrayToString(evt.target.result);
 			// Send the data to the callback
-			callback(evt.target.result, formElement);
-		  }
+			callback(result, formElement);
+		  
 		};
 		
 		// Fire off the slice
 		var blob = file.slice(startBytes, endBytes + 1);
-		reader.readAsBinaryString(blob);
+		reader.readAsArrayBuffer(blob);
 	}
 	
 	/********
@@ -495,10 +498,10 @@ logGrapherLogSource = function(){
 		logGrapherObj.logSourcesConfigurationWrapper.append(
 			'<div class="log-soures-configuration-inner-latest">'+
 			'	<h3>Choose date format</h3>'+
-			'		<div class="pull-right">'+
+			'		<div class="pull-right" style="max-width:50%">'+
 			'			<div class="alert alert-success log-sources-date-transform-alert"> <span class="log-sources-date-transform-alert-label">Out:</span> <span class="log-sources-settings-date-format-output"></span></div>'+
 			'		</div>'+
-			'		<div class="pull-left" style="text-align:center;">'+
+			'		<div class="pull-left" style="max-width:50%">'+
 			'			<div class="alert log-sources-date-transform-alert">'+
 			'				<span class="log-sources-date-transform-alert-label">In:</span> <span class="log-sources-settings-date-format-input"></span>'+
 			'			</div> '+
@@ -742,7 +745,7 @@ logGrapherLogSource = function(){
 	this.readLocalFileSlice = function(file,  callback, startBytes, data){
 
 
-		var chunkSliceSize = 200000;
+		var chunkSliceSize = 100000;
 		var startBytes = typeof(startBytes) == "undefined" ? 0 : startBytes;
 		var endBytes = startBytes+chunkSliceSize;
 		var reader = new FileReader();
@@ -762,22 +765,23 @@ logGrapherLogSource = function(){
 		reader.onloadend = function(evt) {
 		  if (evt.target.readyState == FileReader.DONE) { // DONE == 2
 
+		  	
 			// Have we finished?
 			if(endBytes >= file.size){
 
 				// Send the data to the callback
-				callback(data+evt.target.result);
+				callback(data+parseUint8ARrayToString(evt.target.result));
 			}else{
 
 				// Read the next section
-				curLogSource.readLocalFileSlice(file, callback, endBytes,  data+evt.target.result);
+				curLogSource.readLocalFileSlice(file, callback, endBytes,  data+parseUint8ARrayToString(evt.target.result));
 			}
 		  }
 		};
 
 		// Fire off the slice
 		var blob = file.slice(startBytes, endBytes);
-		reader.readAsBinaryString(blob);
+		reader.readAsArrayBuffer(blob);
 	}
 
 	/*********
@@ -971,3 +975,6 @@ logGrapherLogSource = function(){
 	}
 
 }	
+
+
+

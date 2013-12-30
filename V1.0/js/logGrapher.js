@@ -5,6 +5,13 @@
 
 function logGrapher(parentWrapper){
 	
+	// Check the browser supports web workers, otherwise the whole thing's pointless!
+	if(typeof(Worker)=="undefined")
+  	{
+  		alert("Sorry, your browser does not support Web Workers, please update to the latest Chrome, Firefox or Internet Explorer Brower (10+)");
+  		return;
+  	}
+
 	// For the purposes of anonmyous and child functions, tie the parent obj to the var logGrapherObj
 	var logGrapherObj = this;
 
@@ -446,4 +453,13 @@ function sortByTimestamp(a, b) {
 	if (+a[0] < +b[0]) return -1;
 	if (+a[0] > +b[0]) return 1;
 	return 0;
+}
+
+function parseUint8ARrayToString(buf) {
+	var bufView = new Uint8Array(buf);
+	var unis = [];
+	for (var i = 0; i < bufView.length; i++) {
+	  unis.push(bufView[i]);
+	}
+	return String.fromCharCode.apply(null, unis);
 }
