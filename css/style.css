@@ -1,0 +1,45 @@
+header{
+	background: #ff7e42; /* Old browsers */
+background: -moz-linear-gradient(top,  #ff7e42 0%, #ff5300 100%); /* FF3.6+ */
+background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#ff7e42), color-stop(100%,#ff5300)); /* Chrome,Safari4+ */
+background: -webkit-linear-gradient(top,  #ff7e42 0%,#ff5300 100%); /* Chrome10+,Safari5.1+ */
+background: -o-linear-gradient(top,  #ff7e42 0%,#ff5300 100%); /* Opera 11.10+ */
+background: -ms-linear-gradient(top,  #ff7e42 0%,#ff5300 100%); /* IE10+ */
+background: linear-gradient(to bottom,  #ff7e42 0%,#ff5300 100%); /* W3C */
+filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#ff7e42', endColorstr='#ff5300',GradientType=0 ); /* IE6-9 */
+
+
+	padding:15px;
+	color:white;
+}
+
+header small{
+	color:white;
+}
+header a:active, header a:hover, header a:visited, header a{
+	color: white;
+	text-decoration:underline;
+}
+
+
+main{
+	padding:15px;
+	display:block;
+}
+
+
+body > div.hero-unit, #log-grapher-well, #faq-well, #framework-well{
+	min-width:605px;
+	width:50%;
+	margin:20px auto;
+}
+
+
+/*
+	Common CSS
+*/
+
+
+main, #faq-well, #framework-well{
+	display:none;
+}

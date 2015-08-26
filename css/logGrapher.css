@@ -1,0 +1,104 @@
+.log-sources-wrapper{
+	margin: 20px 0;
+	list-style-position:inside;
+}
+
+/*
+	Log Sources CSS
+	
+*/
+
+.log-sources{
+	padding: 7px 0;
+}
+
+.log-sources:not(:last-child){
+	border-bottom:1px dashed black;
+}
+
+.log-sources ul{
+	display:inline;
+}
+
+.log-sources li{
+	display:inline-block;
+	padding: 0 10px 0 10px;
+	margin:0;
+	vertical-align:middle;
+}
+
+.form-element-url, .form-element-file{
+	width:30%;
+	min-width:200px;
+	max-width:400px;
+}
+
+.log-sources-progress-bar-wrapper .progress{
+	display: inline-block;
+	width: 100px;
+	margin: 0;
+}
+
+.log-sources input[type="text"], .log-sources label{
+	margin:0;
+}
+
+.log-sources input[type="file"]{
+	height:auto;
+}
+
+.log-sources-settings-modal table{
+	width:auto;
+	margin:0 auto;
+}
+
+.log-sources-settings-modal th{
+	text-align:center;
+}
+.log-sources-settings-modal td{
+	max-width:200px;
+	overflow:hidden;
+	text-overflow:ellipsis;
+}
+
+li.log-sources-source-url, li.log-sources-progress-bar-wrapper, .log-sources-configuration-wrapper, .log-soures-configuration-inner-latest{
+	display:none;
+}
+
+.log-sources-date-transform-alert{
+	font-size:2em;
+	line-height:1.5em;
+	padding:0.75em;"
+}
+
+.log-sources-date-transform-alert-label{
+	font-weight:bold;
+}
+.log-sources-date-transform-controls{
+	clear:both;
+	text-align: center
+}
+
+.log-sources-overflow-scroll{
+	overflow:scroll;
+}
+
+/* 
+	Common
+*/
+
+.modal{
+	width:50%;
+	left:25%;
+	margin-left:0;
+}
+
+/* Disable progress bar animation to speed up the update */
+.progress .bar {
+    -webkit-transition: none;
+    -moz-transition: none;
+    -ms-transition: none;
+    -o-transition: none;
+    transition: none;
+}​
+
