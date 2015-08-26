@@ -17,7 +17,7 @@ function logGrapher(parentWrapper){
 
 	this.options = {
 		chartWidth:"auto",
-		chartHeight:"100%"
+		chartHeight:"500px"
 	}
 
 	this.parentWrapper = $(parentWrapper);
@@ -50,7 +50,8 @@ function logGrapher(parentWrapper){
 		'		<div class="clearfix"></div>'+
 		'	</div>'+
 		'</div>'+
-		'<div class="log-chart" style="display:none;background-color:white;width:'+this.options.chartWidth+';height:'+this.options.chartHeight+'"></div>');
+		'<div class="log-chart" style="display:none;background-color:white;width:'+this.options.chartWidth+';height:'+this.options.chartHeight+'"></div>' +
+		'<div class="log-legend"  style="display:none;background-color:white;clear:both;"></div>');
 	
 	// Assign the various important elements to variables
 	this.logSourcesWrapper = this.parentWrapper.find('.log-sources-wrapper');
@@ -130,7 +131,7 @@ logGrapher.prototype.deleteLogSource = function(curLogSource){
 			lastDeletedLogSource = typeof(lastDeletedLogSource) == "undefined" || lastDeletedLogSource.deletionTimestamp > curLogSource.deletionTimestamp ? curLogSource : lastDeletedLogSource;
 		}
 		
-		console.log(lastDeletedLogSource); //debug
+		log(lastDeletedLogSource); //debug
 		// Cancel any currently running animations
 		lastDeletedLogSource.logSource.element.stop();
 
@@ -329,13 +330,48 @@ logGrapher.prototype.waitForLogSources = function(){
 		// Slide up the settings 
 		$('.log-setup-wrapper',logGrapherObj.parentWrapper).slideUp(function(){
 
+			// Render chart legend
+			/*
+			$('.log-legend', logGrapherObj.parentWrapper).html('<ul/>').show();
+			$.each(logGrapherObj.chartSeriesArray, function(i, e){
+				$('<li>' + i + ' ' + e.title + '</li>').appendTo('.log-legend > ul', logGrapherObj.parentWrapper).click(function(ev){
+
+					// Get the series
+					var series = logGrapherObj.chartObj.jqChart('option', 'series');
+					
+					// Toggle the series clicked on 
+					series[i].visible = typeof(series[i].visible) == "undefined" || series[i].visible  ? false : true;
+					
+					log(series[i].title + ":" + series[i].visible + " (changed)");
+					
+					// Update (redraw) the chart
+                	logGrapherObj.chartObj.jqChart('update');
+				});
+			}); 
 			
+			// Add hide all series button
+			$('<button value="hide all series"/>').appendTo('.log-legend > ul', logGrapherObj.parentWrapper).click(function(ev){
+				// Get the series
+				var series = logGrapherObj.chartObj.jqChart('option', 'series');
+
+				// Disable all the eries
+				for(i in series){
+					series[i].visible = false;
+				}
+
+				// Update (redraw) the chart
+            	logGrapherObj.chartObj.jqChart('update');
+			}); */
+
 
 			// Now render the chart
-			$('.log-chart', logGrapherObj.parentWrapper).jqChart({
+			logGrapherObj.chartObj = $('.log-chart', logGrapherObj.parentWrapper).jqChart({
 				title: {
 					text: ' ',
 					font: '18px sans-serif'
+				},
+				legend: {
+					visible:false
 				},
 				background: '#ffffff',
 				axes: [{
@@ -346,9 +382,6 @@ logGrapher.prototype.waitForLogSources = function(){
 					zoomEnabled: true
 				}],
 				mouseInteractionMode: 'zooming',
-				legend: {
-					visible:false
-				},
 				tooltips: {
 					//type: 'shared'
 				},
@@ -462,4 +495,12 @@ function parseUint8ARrayToString(buf) {
 	  unis.push(bufView[i]);
 	}
 	return String.fromCharCode.apply(null, unis);
+}
+
+togglePlot = function(chart,seriesIdx)
+{
+  var someData = chart.getData();
+  someData[seriesIdx].lines.show = !someData[seriesIdx].lines.show;
+  somePlot.setData(someData);
+  somePlot.draw();
 }

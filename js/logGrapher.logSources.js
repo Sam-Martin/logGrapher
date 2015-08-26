@@ -432,14 +432,16 @@ logGrapherLogSource = function(){
 		logGrapherObj.logSourcesConfigurationWrapper.append(
 			'<div class="log-soures-configuration-inner-latest">'+
 			'	<h3>Choose schema</h3>'+
-			'	<table class="table table-bordered table-condensed">'+
-			'		<thead>'+
-						logPreviewTableHeader+
-			'		</thead>'+
-			'		<tbody>'+
-						logPreviewTableBody+
-			'		</tbody>'+
-			'	</table>'+
+			'	<div class="log-sources-overflow-scroll">'+
+			'		<table class="table table-bordered table-condensed">'+
+			'			<thead>'+
+							logPreviewTableHeader+
+			'			</thead>'+
+			'			<tbody>'+
+							logPreviewTableBody+
+			'			</tbody>'+
+			'		</table>'+
+			'	</div>'+
 			'	<button class="btn btn-primary logsource-configuration-previous-button">Previous</button>'+
 			'	<button class="btn btn-primary logsource-configuration-next-button pull-right">Next</button>'+
 			'</div>'

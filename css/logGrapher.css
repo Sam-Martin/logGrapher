@@ -79,6 +79,10 @@ li.log-sources-source-url, li.log-sources-progress-bar-wrapper, .log-sources-con
 	text-align: center
 }
 
+.log-sources-overflow-scroll{
+	overflow:scroll;
+}
+
 /* 
 	Common
 */

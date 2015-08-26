@@ -1,6 +1,6 @@
 // Import CSV parser
 var jQuery= {}; //initialise dummy $ for jquery-csv
-importScripts('http://jquery-csv.googlecode.com/files/jquery.csv-0.71.min.js');
+importScripts('jquery.csv-0.71.min.js');
 
 
 // Listen for input from the main script
